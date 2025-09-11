@@ -17,6 +17,13 @@ export const userCompanyPartySchema = z.object({
   }),
 });
 
+// Classe schema
+export const classeSchema = z.object({
+  id: z.string().cuid(),
+  name: z.string(),
+  createdAt: z.string().datetime(),
+});
+
 // Base user schema
 export const userSchema = z.object({
   id: z.string().cuid(),
@@ -27,27 +34,33 @@ export const userSchema = z.object({
   isActive: z.boolean(),
   lvl: z.number().int().min(1).max(85),
   role: userRoleSchema,
+  classeId: z.string().cuid().nullable(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
+  classe: classeSchema.nullable().optional(),
   companyParties: z.array(userCompanyPartySchema).optional(),
 });
 
 // Create user schema (for ADMIN creating users)
+// Only email, password, name, and nickname are required
+// Other fields (including classe) will be filled by user later
 export const createUserSchema = z.object({
   email: z.string().email('Invalid email format'),
+  password: z
+    .string()
+    .min(6, 'Password must be at least 6 characters'),
   name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
   nickname: z
     .string()
     .min(1, 'Nickname is required')
     .max(50, 'Nickname too long')
     .regex(/^[a-zA-Z0-9_]+$/, 'Nickname can only contain letters, numbers, and underscores'),
-  password: z
-    .string()
-    .min(6, 'Password must be at least 6 characters'),
+  // Optional fields - user can set these later
   avatar: z.string().url('Invalid avatar URL').optional(),
   isActive: z.boolean().default(true),
   lvl: z.number().int().min(1).max(85).default(1),
-  role: userRoleSchema,
+  role: userRoleSchema.default('PLAYER'),
+  classeId: z.string().cuid().optional(), // User can set class later
 });
 
 // Update user schema
@@ -72,6 +85,30 @@ export const updateUserSchema = z.object({
   isActive: z.boolean().optional(),
   lvl: z.number().int().min(1).max(85).optional(),
   role: userRoleSchema.optional(),
+  classeId: z.string().cuid().nullable().optional(), // User can update their class
+});
+
+// Update profile schema (restricted fields for user self-update)
+// Users cannot update: email, role, isActive
+export const updateProfileSchema = z.object({
+  name: z
+    .string()
+    .min(1, 'Name is required')
+    .max(100, 'Name too long')
+    .optional(),
+  nickname: z
+    .string()
+    .min(1, 'Nickname is required')
+    .max(50, 'Nickname too long')
+    .regex(/^[a-zA-Z0-9_]+$/, 'Nickname can only contain letters, numbers, and underscores')
+    .optional(),
+  password: z
+    .string()
+    .min(6, 'Password must be at least 6 characters')
+    .optional(),
+  avatar: z.string().url('Invalid avatar URL').nullable().optional(),
+  lvl: z.number().int().min(1).max(85).optional(),
+  classeId: z.string().cuid().nullable().optional(),
 });
 
 // Query parameters schema
@@ -133,6 +170,7 @@ export type UserRole = z.infer<typeof userRoleSchema>;
 export type User = z.infer<typeof userSchema>;
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type GetUsersQuery = z.infer<typeof getUsersQuerySchema>;
 export type UserParams = z.infer<typeof userParamsSchema>;
 export type UserResponse = z.infer<typeof userResponseSchema>;
@@ -147,6 +185,10 @@ export const createUserJsonSchema = zodToJsonSchema(
 export const updateUserJsonSchema = zodToJsonSchema(
   updateUserSchema,
   'UpdateUser'
+);
+export const updateProfileJsonSchema = zodToJsonSchema(
+  updateProfileSchema,
+  'UpdateProfile'
 );
 export const getUsersQueryJsonSchema = zodToJsonSchema(
   getUsersQuerySchema,

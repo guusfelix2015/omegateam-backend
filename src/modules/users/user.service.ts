@@ -2,6 +2,7 @@ import type { PrismaClient } from '@prisma/client';
 import type {
   CreateUserInput,
   UpdateUserInput,
+  UpdateProfileInput,
   GetUsersQuery,
   UserResponse,
   UsersListResponse,
@@ -27,6 +28,10 @@ export class UserService {
         ...user,
         createdAt: user.createdAt.toISOString(),
         updatedAt: user.updatedAt.toISOString(),
+        classe: user.classe ? {
+          ...user.classe,
+          createdAt: user.classe.createdAt.toISOString(),
+        } : null,
       })),
       pagination: {
         page: query.page,
@@ -64,6 +69,10 @@ export class UserService {
       ...user,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
+      classe: user.classe ? {
+        ...user.classe,
+        createdAt: user.classe.createdAt.toISOString(),
+      } : null,
       companyParties,
     };
   }
@@ -123,13 +132,32 @@ export class UserService {
       id: user.id,
       email: user.email,
       name: user.name,
-      nickname: user.nickname as string,
+      nickname: user.nickname,
       avatar: user.avatar,
       isActive: user.isActive,
-      lvl: user.lvl as number,
+      lvl: user.lvl,
       role: user.role as 'ADMIN' | 'PLAYER',
+      classeId: user.classeId,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
+      classe: user.classe ? {
+        ...user.classe,
+        createdAt: user.classe.createdAt.toISOString(),
+      } : null,
+    };
+  }
+
+  async updateProfile(id: string, data: UpdateProfileInput): Promise<UserResponse> {
+    const user = await this.userRepository.update(id, data);
+
+    return {
+      ...user,
+      createdAt: user.createdAt.toISOString(),
+      updatedAt: user.updatedAt.toISOString(),
+      classe: user.classe ? {
+        ...user.classe,
+        createdAt: user.classe.createdAt.toISOString(),
+      } : null,
     };
   }
 

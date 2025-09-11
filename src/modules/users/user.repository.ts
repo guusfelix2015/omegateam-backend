@@ -7,6 +7,15 @@ import type {
 } from '@/routes/users/users.schema.js';
 import { NotFoundError, ConflictError } from '@/libs/errors.js';
 
+// Type for user with classe relation
+type UserWithClasse = Omit<User, 'password'> & {
+  classe: {
+    id: string;
+    name: string;
+    createdAt: Date;
+  } | null;
+};
+
 export class UserRepository {
   constructor(private prisma: PrismaClient) { }
 
@@ -53,10 +62,17 @@ export class UserRepository {
           avatar: true,
           isActive: true,
           lvl: true,
-
           role: true,
+          classeId: true,
           createdAt: true,
           updatedAt: true,
+          classe: {
+            select: {
+              id: true,
+              name: true,
+              createdAt: true,
+            },
+          },
         },
       }),
       this.prisma.user.count({ where }),
@@ -71,7 +87,7 @@ export class UserRepository {
     };
   }
 
-  async findById(id: string): Promise<Omit<User, 'password'> | null> {
+  async findById(id: string): Promise<UserWithClasse | null> {
     const user = await this.prisma.user.findUnique({
       where: { id },
       select: {
@@ -82,17 +98,24 @@ export class UserRepository {
         avatar: true,
         isActive: true,
         lvl: true,
-
         role: true,
+        classeId: true,
         createdAt: true,
         updatedAt: true,
+        classe: {
+          select: {
+            id: true,
+            name: true,
+            createdAt: true,
+          },
+        },
       },
     });
 
     return user;
   }
 
-  async findByEmail(email: string): Promise<Omit<User, 'password'> | null> {
+  async findByEmail(email: string): Promise<UserWithClasse | null> {
     return this.prisma.user.findUnique({
       where: { email },
       select: {
@@ -103,10 +126,17 @@ export class UserRepository {
         avatar: true,
         isActive: true,
         lvl: true,
-
         role: true,
+        classeId: true,
         createdAt: true,
         updatedAt: true,
+        classe: {
+          select: {
+            id: true,
+            name: true,
+            createdAt: true,
+          },
+        },
       },
     });
   }
@@ -122,8 +152,8 @@ export class UserRepository {
         avatar: true,
         isActive: true,
         lvl: true,
-
         role: true,
+        classeId: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -144,8 +174,8 @@ export class UserRepository {
           avatar: true,
           isActive: true,
           lvl: true,
-
           role: true,
+          classeId: true,
           createdAt: true,
           updatedAt: true,
         },
@@ -172,7 +202,7 @@ export class UserRepository {
   async update(
     id: string,
     data: UpdateUserInput
-  ): Promise<Omit<User, 'password'>> {
+  ): Promise<UserWithClasse> {
     try {
       const user = await this.prisma.user.update({
         where: { id },
@@ -185,10 +215,17 @@ export class UserRepository {
           avatar: true,
           isActive: true,
           lvl: true,
-
           role: true,
+          classeId: true,
           createdAt: true,
           updatedAt: true,
+          classe: {
+            select: {
+              id: true,
+              name: true,
+              createdAt: true,
+            },
+          },
         },
       });
 

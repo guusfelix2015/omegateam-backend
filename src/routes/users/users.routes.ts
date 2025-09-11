@@ -4,6 +4,7 @@ import { UserService } from '@/modules/users/user.service.js';
 import {
   createUserJsonSchema,
   updateUserJsonSchema,
+  updateProfileJsonSchema,
   getUsersQueryJsonSchema,
   usersListResponseJsonSchema,
   userJsonSchema,
@@ -12,6 +13,7 @@ import {
 import type {
   CreateUserInput,
   UpdateUserInput,
+  UpdateProfileInput,
   GetUsersQuery,
   UserParams,
 } from './users.schema.js';
@@ -132,6 +134,25 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
     },
     handler: async (request, reply) => {
       return usersController.deleteUser(request, reply);
+    },
+  });
+
+  // PUT /users/profile - Update current user profile (restricted fields)
+  fastify.put<{ Body: UpdateProfileInput }>('/profile', {
+    preValidation: [fastify.authenticate],
+    schema: {
+      description: 'Update current user profile (restricted fields)',
+      tags: ['Users'],
+      body: updateProfileJsonSchema,
+      response: {
+        200: userJsonSchema,
+        400: errorResponseJsonSchema,
+        401: errorResponseJsonSchema,
+        404: errorResponseJsonSchema,
+      },
+    },
+    handler: async (request, reply) => {
+      return usersController.updateProfile(request, reply);
     },
   });
 

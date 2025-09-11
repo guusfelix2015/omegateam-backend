@@ -172,6 +172,16 @@ const indexRoutes: FastifyPluginAsync = async (fastify) => {
             role: { type: 'string', enum: ['ADMIN', 'PLAYER'] },
             isActive: { type: 'boolean' },
             lvl: { type: 'number' },
+            classeId: { type: 'string', nullable: true },
+            classe: {
+              type: 'object',
+              nullable: true,
+              properties: {
+                id: { type: 'string' },
+                name: { type: 'string' },
+                createdAt: { type: 'string' },
+              },
+            },
             createdAt: { type: 'string' },
             updatedAt: { type: 'string' },
           },
@@ -211,8 +221,16 @@ const indexRoutes: FastifyPluginAsync = async (fastify) => {
           role: true,
           isActive: true,
           lvl: true,
+          classeId: true,
           createdAt: true,
           updatedAt: true,
+          classe: {
+            select: {
+              id: true,
+              name: true,
+              createdAt: true,
+            },
+          },
         },
       });
 
@@ -229,6 +247,10 @@ const indexRoutes: FastifyPluginAsync = async (fastify) => {
         ...user,
         createdAt: user.createdAt.toISOString(),
         updatedAt: user.updatedAt.toISOString(),
+        classe: user.classe ? {
+          ...user.classe,
+          createdAt: user.classe.createdAt.toISOString(),
+        } : null,
       });
     },
   });

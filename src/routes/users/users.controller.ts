@@ -2,6 +2,7 @@ import type { FastifyRequest, FastifyReply } from 'fastify';
 import type {
   CreateUserInput,
   UpdateUserInput,
+  UpdateProfileInput,
   GetUsersQuery,
   UserParams,
 } from './users.schema.js';
@@ -65,6 +66,16 @@ export class UsersController {
     return reply.status(200).send({
       message: 'User deleted successfully',
     });
+  }
+
+  async updateProfile(
+    request: FastifyRequest<{ Body: UpdateProfileInput }>,
+    reply: FastifyReply
+  ) {
+    const userId = request.user!.id;
+    const user = await this.userService.updateProfile(userId, request.body);
+
+    return reply.status(200).send(user);
   }
 
   async getUserStats(

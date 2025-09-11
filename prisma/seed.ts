@@ -9,6 +9,50 @@ async function main() {
   await prisma.userCompanyParty.deleteMany();
   await prisma.companyParty.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.classe.deleteMany();
+
+  // Create classes
+  const classesData = [
+    'Gladiador',
+    'Warlord',
+    'Paladin',
+    'Dark Avenger',
+    'Treasure Hunter',
+    'Hawkeye',
+    'Sorcerer',
+    'Necromancer',
+    'Warlock',
+    'Bishop',
+    'Prophet',
+    'Temple Knight',
+    'Sword Singer',
+    'PlainsWalker',
+    'Silver Ranger',
+    'Spell Singer',
+    'Elemental Summoner',
+    'Elven Elder',
+    'Shillien Knight',
+    'BladeDancer',
+    'Abyss Walker',
+    'Phantom Ranger',
+    'Spell Howler',
+    'Phantom Summoner',
+    'Shillien Elder',
+    'Destroyer',
+    'Tyrant',
+    'Overlord',
+    'Warcryer',
+    'Crafter',
+    'Spoiler',
+  ];
+
+  const classes = await Promise.all(
+    classesData.map(name =>
+      prisma.classe.create({
+        data: { name }
+      })
+    )
+  );
 
   // Create seed users
   const usersData = [
@@ -266,6 +310,10 @@ async function main() {
   });
 
   console.log('✅ Seed completed successfully!');
+  console.log(`Created ${classes.length} classes:`);
+  classes.forEach(classe => {
+    console.log(`  - ${classe.name}`);
+  });
   console.log(`Created ${users.length} users:`);
   users.forEach(user => {
     console.log(`  - ${user.name} (${user.email})`);

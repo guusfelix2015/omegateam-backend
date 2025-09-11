@@ -25,13 +25,26 @@ model User {
   isActive  Boolean  @default(true)
   lvl       Int      @default(1)
   role      UserRole
+  classeId  String?  // Optional - user can set later
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Many-to-many relationship with CompanyParty
+  // Relations
+  classe         Classe?            @relation(fields: [classeId], references: [id])
   companyParties UserCompanyParty[]
 
   @@map("users")
+}
+
+model Classe {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  // Relations
+  users User[]
+
+  @@map("classes")
 }
 
 model CompanyParty {

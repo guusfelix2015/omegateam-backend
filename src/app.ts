@@ -13,6 +13,7 @@ import simpleDocsPlugin from '@/plugins/simple-docs.js';
 import indexRoutes from '@/routes/index.js';
 import usersRoutes from '@/routes/users/users.routes.js';
 import companyPartiesRoutes from '@/routes/company-parties/company-parties.routes.js';
+import { classesRoutes } from '@/routes/classes/classes.routes.js';
 
 export async function createApp(): Promise<FastifyInstance> {
   const app = Fastify({
@@ -49,6 +50,7 @@ export async function createApp(): Promise<FastifyInstance> {
   await app.register(indexRoutes);
   await app.register(usersRoutes, { prefix: '/users' });
   await app.register(companyPartiesRoutes, { prefix: '/company-parties' });
+  await app.register(classesRoutes, { prefix: '/classes' });
 
   // 404 handler
   app.setNotFoundHandler(async (request, reply) => {
