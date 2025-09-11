@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: lineage-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: lineage_db
+      POSTGRES_USER: lineage_user
+      POSTGRES_PASSWORD: lineage_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lineage_user -d lineage_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lineage-network
+
+  # Backend Development
+  backend-dev:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    container_name: lineage-backend-dev
+    restart: unless-stopped
+    profiles:
+      - dev
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://lineage_user:lineage_password@postgres:5432/lineage_db
+      PORT: 3000
+      HOST: 0.0.0.0
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      CORS_ORIGIN: "*"
+      SWAGGER_ENABLED: "true"
+      LOG_LEVEL: debug
+    ports:
+      - "3000:3000"
+      - "9229:9229" # Debug port
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/dist
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo 'Waiting for database...' &&
+        npx prisma migrate deploy &&
+        npx prisma db seed &&
+        npm run dev
+      "
+    networks:
+      - lineage-network
+
+  # Backend Production
+  backend-prod:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: lineage-backend-prod
+    restart: unless-stopped
+    profiles:
+      - prod
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://lineage_user:lineage_password@postgres:5432/lineage_db
+      PORT: 3000
+      HOST: 0.0.0.0
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      CORS_ORIGIN: "https://yourdomain.com"
+      SWAGGER_ENABLED: "false"
+      LOG_LEVEL: info
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo 'Running database migrations...' &&
+        npx prisma migrate deploy &&
+        echo 'Starting production server...' &&
+        npm start
+      "
+    networks:
+      - lineage-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  lineage-network:
+    driver: bridge

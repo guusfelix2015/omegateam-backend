@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  PLAYER
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  nickname  String   @unique
+  password  String?  // Optional for demo purposes
+  avatar    String?
+  isActive  Boolean  @default(true)
+  lvl       Int      @default(1)
+  role      UserRole
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Many-to-many relationship with CompanyParty
+  companyParties UserCompanyParty[]
+
+  @@map("users")
+}
+
+model CompanyParty {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Many-to-many relationship with User
+  users UserCompanyParty[]
+
+  @@map("company_parties")
+}
+
+model UserCompanyParty {
+  id             String       @id @default(cuid())
+  userId         String
+  companyPartyId String
+  joinedAt       DateTime     @default(now())
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyParty CompanyParty @relation(fields: [companyPartyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, companyPartyId])
+  @@map("user_company_parties")
+}

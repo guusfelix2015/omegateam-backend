@@ -1,0 +1,6 @@
+[
+  {
+    "command": "extension.formatWithPrettier",
+    "title": "Format with Prettier (Custom)"
+  }
+]
