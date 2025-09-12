@@ -3,16 +3,37 @@ import jwt from 'jsonwebtoken';
 import { UnauthorizedError } from './errors.js';
 import { env } from './env.js';
 
-// JWT payload interface
 interface TokenPayload {
   userId: string;
   email: string;
-  role: 'ADMIN' | 'PLAYER';
+  role: 'ADMIN' | 'PLAYER' | 'CP_LEADER';
   iat?: number;
   exp?: number;
 }
 
-// Create JWT token
+interface UserFromDB {
+  id: string;
+  email: string;
+  password: string | null;
+  role: 'ADMIN' | 'PLAYER' | 'CP_LEADER';
+  isActive: boolean;
+}
+
+interface AuthPrismaClient {
+  user: {
+    findUnique: (args: {
+      where: { email: string };
+      select: {
+        id: boolean;
+        email: boolean;
+        password: boolean;
+        role: boolean;
+        isActive: boolean;
+      };
+    }) => Promise<UserFromDB | null>;
+  };
+}
+
 export function createToken(
   payload: Omit<TokenPayload, 'iat' | 'exp'>
 ): string {
@@ -23,7 +44,6 @@ export function createToken(
   });
 }
 
-// Verify JWT token
 export function verifyToken(token: string): TokenPayload {
   try {
     const decoded = jwt.verify(token, env.JWT_SECRET, {
@@ -43,7 +63,6 @@ export function verifyToken(token: string): TokenPayload {
   }
 }
 
-// Authentication middleware
 export async function authenticate(
   request: FastifyRequest,
   _reply: FastifyReply
@@ -59,7 +78,7 @@ export async function authenticate(
       throw new UnauthorizedError('Bearer token required');
     }
 
-    const token = authorization.slice(7); // Remove 'Bearer ' prefix
+    const token = authorization.slice(7);
 
     if (!token) {
       throw new UnauthorizedError('Token required');
@@ -67,7 +86,6 @@ export async function authenticate(
 
     const payload = verifyToken(token);
 
-    // Add user info to request context
     request.user = {
       id: payload.userId,
       email: payload.email,
@@ -81,11 +99,10 @@ export async function authenticate(
   }
 }
 
-// Login function - verify against database
 export async function login(
   email: string,
   password: string,
-  prisma: any
+  prisma: AuthPrismaClient
 ): Promise<string> {
   const user = await prisma.user.findUnique({
     where: { email },
@@ -98,13 +115,11 @@ export async function login(
     },
   });
 
-  if (!user || !user.isActive) {
+  if (!user?.isActive) {
     throw new UnauthorizedError('Invalid credentials');
   }
 
-  // In a real app, you would hash the password and compare
-  // For demo purposes, we're doing plain text comparison
-  if (user.password !== password) {
+  if (!user.password || user.password !== password) {
     throw new UnauthorizedError('Invalid credentials');
   }
 
@@ -115,8 +130,7 @@ export async function login(
   });
 }
 
-// Role-based authorization middleware
-export function requireRole(allowedRoles: ('ADMIN' | 'PLAYER')[]) {
+export function requireRole(allowedRoles: ('ADMIN' | 'PLAYER' | 'CP_LEADER')[]) {
   return async (request: FastifyRequest, _reply: FastifyReply): Promise<void> => {
     if (!request.user) {
       throw new UnauthorizedError('Authentication required');
@@ -128,16 +142,16 @@ export function requireRole(allowedRoles: ('ADMIN' | 'PLAYER')[]) {
   };
 }
 
-// Convenience middleware for admin-only routes
 export const requireAdmin = requireRole(['ADMIN']);
 
-// Extend FastifyRequest type to include user
+export const requirePlayer = requireRole(['PLAYER', 'CP_LEADER']);
+
 declare module 'fastify' {
   interface FastifyRequest {
     user?: {
       id: string;
       email: string;
-      role: 'ADMIN' | 'PLAYER';
+      role: 'ADMIN' | 'PLAYER' | 'CP_LEADER';
     };
   }
 }

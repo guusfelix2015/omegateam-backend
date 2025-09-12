@@ -1,7 +1,6 @@
 import { config } from 'dotenv';
 import { z } from 'zod';
 
-// Load environment variables
 config();
 
 const envSchema = z.object({
@@ -11,7 +10,6 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3000),
   HOST: z.string().default('0.0.0.0'),
 
-  // Database
   DATABASE_URL: z.string().url(),
 
   // Security
@@ -47,7 +45,7 @@ function validateEnv(): Env {
         .join('\n');
 
       throw new Error(
-        `❌ Invalid environment variables:\n${missingVars}\n\nPlease check your .env file.`
+        `Invalid environment variables:\n${missingVars}\n\nPlease check your .env file.`
       );
     }
     throw error;

@@ -3,13 +3,12 @@ import { ClassesService } from './classes.service';
 import {
   classesListResponseSchema,
   classeResponseSchema,
-  errorResponseSchema,
   classesListResponseJsonSchema,
   classeJsonSchema,
   errorResponseJsonSchema,
 } from './classes.schema';
 
-export async function classesRoutes(fastify: FastifyInstance) {
+export function classesRoutes(fastify: FastifyInstance) {
   const classesService = new ClassesService(fastify.prisma);
 
   // GET /classes - List all classes
@@ -35,7 +34,15 @@ export async function classesRoutes(fastify: FastifyInstance) {
 
         return reply.code(200).send(response);
       } catch (error) {
-        fastify.log.error('Error fetching classes:', error);
+        fastify.log.error(
+          {
+            error: error instanceof Error ? {
+              message: error.message,
+              stack: error.stack,
+            } : error,
+          },
+          'Error fetching classes'
+        );
         return reply.code(500).send({
           error: {
             message: 'Internal server error',
@@ -84,7 +91,15 @@ export async function classesRoutes(fastify: FastifyInstance) {
         const response = classeResponseSchema.parse(classe);
         return reply.code(200).send(response);
       } catch (error) {
-        fastify.log.error('Error fetching class:', error);
+        fastify.log.error(
+          {
+            error: error instanceof Error ? {
+              message: error.message,
+              stack: error.stack,
+            } : error,
+          },
+          'Error fetching class'
+        );
         return reply.code(500).send({
           error: {
             message: 'Internal server error',

@@ -46,7 +46,7 @@ export const userInCompanyPartySchema = z.object({
   nickname: z.string(),
   avatar: z.string().nullable(),
   lvl: z.number(),
-  role: z.enum(['ADMIN', 'PLAYER']),
+  role: z.enum(['ADMIN', 'PLAYER', 'CP_LEADER']),
 });
 
 export const companyPartyUserSchema = z.object({
@@ -61,7 +61,7 @@ export const companyPartyResponseSchema = z.object({
   name: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),
-  users: z.array(companyPartyUserSchema),
+  users: z.array(userInCompanyPartySchema), // Use flattened user schema directly
 });
 
 export const companyPartyListItemSchema = z.object({

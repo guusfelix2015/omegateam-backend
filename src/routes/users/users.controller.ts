@@ -72,14 +72,23 @@ export class UsersController {
     request: FastifyRequest<{ Body: UpdateProfileInput }>,
     reply: FastifyReply
   ) {
-    const userId = request.user!.id;
+    if (!request.user) {
+      return reply.status(401).send({
+        error: {
+          message: 'Authentication required',
+          statusCode: 401,
+        },
+      });
+    }
+
+    const userId = request.user.id;
     const user = await this.userService.updateProfile(userId, request.body);
 
     return reply.status(200).send(user);
   }
 
   async getUserStats(
-    request: FastifyRequest,
+    _request: FastifyRequest,
     reply: FastifyReply
   ) {
     const stats = await this.userService.getUserStats();

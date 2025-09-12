@@ -2,12 +2,12 @@ import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
 import { env, isDev } from '@/libs/env.js';
 import { errorHandler } from '@/libs/errors.js';
-import { authenticate, requireAdmin } from '@/libs/auth.js';
+import { authenticate, requireAdmin, requirePlayer } from '@/libs/auth.js';
 
 // Plugins
 import prismaPlugin from '@/plugins/prisma.js';
 import securityPlugin from '@/plugins/security.js';
-import simpleDocsPlugin from '@/plugins/simple-docs.js';
+import swaggerPlugin from '@/plugins/swagger.js';
 
 // Routes
 import indexRoutes from '@/routes/index.js';
@@ -40,11 +40,12 @@ export async function createApp(): Promise<FastifyInstance> {
   // Register plugins
   await app.register(prismaPlugin);
   await app.register(securityPlugin);
-  await app.register(simpleDocsPlugin);
+  await app.register(swaggerPlugin);
 
   // Decorate with auth middleware
   app.decorate('authenticate', authenticate);
   app.decorate('requireAdmin', requireAdmin);
+  app.decorate('requirePlayer', requirePlayer);
 
   // Register routes
   await app.register(indexRoutes);

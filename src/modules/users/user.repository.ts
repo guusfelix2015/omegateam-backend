@@ -7,7 +7,6 @@ import type {
 } from '@/routes/users/users.schema.js';
 import { NotFoundError, ConflictError } from '@/libs/errors.js';
 
-// Type for user with classe relation
 type UserWithClasse = Omit<User, 'password'> & {
   classe: {
     id: string;
@@ -23,7 +22,6 @@ export class UserRepository {
     const { page, limit, search, isActive, role, sortBy, sortOrder } = query;
     const skip = (page - 1) * limit;
 
-    // Build where clause
     const where: Prisma.UserWhereInput = {};
 
     if (search) {
@@ -42,12 +40,10 @@ export class UserRepository {
       where.role = role;
     }
 
-    // Build order by clause
     const orderBy: Prisma.UserOrderByWithRelationInput = {
       [sortBy]: sortOrder,
     };
 
-    // Execute queries in parallel
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({
         where,

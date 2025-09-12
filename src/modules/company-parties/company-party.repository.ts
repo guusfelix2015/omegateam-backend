@@ -46,7 +46,7 @@ export interface GetCompanyPartiesOptions {
 }
 
 export class CompanyPartyRepository {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: PrismaClient) { }
 
   async create(data: CreateCompanyPartyData): Promise<CompanyParty> {
     return this.prisma.companyParty.create({
@@ -63,11 +63,11 @@ export class CompanyPartyRepository {
 
     const where = search
       ? {
-          name: {
-            contains: search,
-            mode: 'insensitive' as const,
-          },
-        }
+        name: {
+          contains: search,
+          mode: 'insensitive' as const,
+        },
+      }
       : {};
 
     const [data, total] = await Promise.all([
@@ -213,6 +213,7 @@ export class CompanyPartyRepository {
         isActive: true,
         lvl: true,
         role: true,
+        classeId: true,
         createdAt: true,
         updatedAt: true,
         companyParties: {

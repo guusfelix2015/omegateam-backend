@@ -1,10 +1,8 @@
 import {
   CompanyPartyRepository,
-  type CompanyPartyWithUsers,
   type CreateCompanyPartyData,
   type UpdateCompanyPartyData,
   type GetCompanyPartiesOptions,
-  type UserWithCompanyParties,
 } from './company-party.repository.js';
 
 export interface CompanyPartyResponse {
@@ -14,17 +12,12 @@ export interface CompanyPartyResponse {
   updatedAt: string;
   users: Array<{
     id: string;
-    userId: string;
-    joinedAt: string;
-    user: {
-      id: string;
-      email: string;
-      name: string;
-      nickname: string;
-      avatar: string | null;
-      lvl: number;
-      role: string;
-    };
+    email: string;
+    name: string;
+    nickname: string;
+    avatar: string | null;
+    lvl: number;
+    role: string;
   }>;
 }
 
@@ -61,17 +54,16 @@ export interface UserCompanyPartyResponse {
 }
 
 export class CompanyPartyService {
-  constructor(private companyPartyRepository: CompanyPartyRepository) {}
+  constructor(private companyPartyRepository: CompanyPartyRepository) { }
 
   async createCompanyParty(data: CreateCompanyPartyData): Promise<CompanyPartyResponse> {
-    // Check if company party with same name already exists
     const existingCP = await this.companyPartyRepository.findByName(data.name);
     if (existingCP) {
       throw new Error('Company Party with this name already exists');
     }
 
     const companyParty = await this.companyPartyRepository.create(data);
-    
+
     return {
       id: companyParty.id,
       name: companyParty.name,
@@ -122,16 +114,18 @@ export class CompanyPartyService {
       createdAt: companyParty.createdAt.toISOString(),
       updatedAt: companyParty.updatedAt.toISOString(),
       users: companyParty.users.map(userCP => ({
-        id: userCP.id,
-        userId: userCP.userId,
-        joinedAt: userCP.joinedAt.toISOString(),
-        user: userCP.user,
+        id: userCP.user.id,
+        email: userCP.user.email,
+        name: userCP.user.name,
+        nickname: userCP.user.nickname,
+        avatar: userCP.user.avatar,
+        lvl: userCP.user.lvl,
+        role: userCP.user.role,
       })),
     };
   }
 
   async updateCompanyParty(id: string, data: UpdateCompanyPartyData): Promise<CompanyPartyResponse | null> {
-    // Check if new name already exists (if name is being updated)
     if (data.name) {
       const existingCP = await this.companyPartyRepository.findByName(data.name);
       if (existingCP && existingCP.id !== id) {
@@ -144,7 +138,6 @@ export class CompanyPartyService {
       return null;
     }
 
-    // Get the updated company party with users
     return this.getCompanyPartyById(id);
   }
 
@@ -153,13 +146,11 @@ export class CompanyPartyService {
   }
 
   async addPlayerToCompanyParty(companyPartyId: string, userId: string): Promise<boolean> {
-    // Check if company party exists
     const companyParty = await this.companyPartyRepository.findById(companyPartyId);
     if (!companyParty) {
       throw new Error('Company Party not found');
     }
 
-    // Check if player is already in the company party
     const isAlreadyMember = await this.companyPartyRepository.isPlayerInCompanyParty(companyPartyId, userId);
     if (isAlreadyMember) {
       throw new Error('Player is already a member of this Company Party');
@@ -169,13 +160,11 @@ export class CompanyPartyService {
   }
 
   async removePlayerFromCompanyParty(companyPartyId: string, userId: string): Promise<boolean> {
-    // Check if company party exists
     const companyParty = await this.companyPartyRepository.findById(companyPartyId);
     if (!companyParty) {
       throw new Error('Company Party not found');
     }
 
-    // Check if player is actually in the company party
     const isMember = await this.companyPartyRepository.isPlayerInCompanyParty(companyPartyId, userId);
     if (!isMember) {
       throw new Error('Player is not a member of this Company Party');

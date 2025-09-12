@@ -51,7 +51,6 @@ export class UserService {
       throw new NotFoundError('User');
     }
 
-    // Get user's company parties
     const userWithCPs = await this.companyPartyRepository.getUserWithCompanyParties(id);
     const companyParties = userWithCPs?.companyParties.map(userCP => ({
       id: userCP.id,
@@ -78,7 +77,6 @@ export class UserService {
   }
 
   async createUser(data: CreateUserInput): Promise<UserResponse> {
-    // Generate avatar if not provided
     if (!data.avatar) {
       const seed = encodeURIComponent(
         data.name.toLowerCase().replace(/\s+/g, '')
@@ -96,7 +94,6 @@ export class UserService {
   }
 
   async updateUser(id: string, data: UpdateUserInput): Promise<UserResponse> {
-    // Check if user exists first
     const exists = await this.userRepository.exists(id);
     if (!exists) {
       throw new NotFoundError('User');
@@ -108,11 +105,14 @@ export class UserService {
       ...user,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
+      classe: user.classe ? {
+        ...user.classe,
+        createdAt: user.classe.createdAt.toISOString(),
+      } : null,
     };
   }
 
   async deleteUser(id: string): Promise<void> {
-    // Check if user exists first
     const exists = await this.userRepository.exists(id);
     if (!exists) {
       throw new NotFoundError('User');

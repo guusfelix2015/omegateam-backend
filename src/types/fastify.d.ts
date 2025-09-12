@@ -11,13 +11,17 @@ declare module 'fastify' {
       request: FastifyRequest,
       reply: FastifyReply
     ) => Promise<void>;
+    requirePlayer: (
+      request: FastifyRequest,
+      reply: FastifyReply
+    ) => Promise<void>;
   }
 
   interface FastifyRequest {
     user?: {
       id: string;
       email: string;
-      role: 'ADMIN' | 'PLAYER';
+      role: 'ADMIN' | 'PLAYER' | 'CP_LEADER';
     };
   }
 }

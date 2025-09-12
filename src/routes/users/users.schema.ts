@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 // User role enum
-export const userRoleSchema = z.enum(['ADMIN', 'PLAYER']);
+export const userRoleSchema = z.enum(['ADMIN', 'PLAYER', 'CP_LEADER']);
 
 // Company Party association schema
 export const userCompanyPartySchema = z.object({

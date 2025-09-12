@@ -169,7 +169,7 @@ const indexRoutes: FastifyPluginAsync = async (fastify) => {
             email: { type: 'string' },
             name: { type: 'string' },
             nickname: { type: 'string' },
-            role: { type: 'string', enum: ['ADMIN', 'PLAYER'] },
+            role: { type: 'string', enum: ['ADMIN', 'PLAYER', 'CP_LEADER'] },
             isActive: { type: 'boolean' },
             lvl: { type: 'number' },
             classeId: { type: 'string', nullable: true },
