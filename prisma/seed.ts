@@ -49,7 +49,7 @@ async function main() {
   const classes = await Promise.all(
     classesData.map(name =>
       prisma.classe.create({
-        data: { name }
+        data: { name },
       })
     )
   );
@@ -115,8 +115,18 @@ async function main() {
   ]);
 
   // Add players to company parties
-  const [admin, player, cpLeader] = users;
+  const [player, cpLeader] = users;
   const [brazilianStorm, eliteWarriors, shadowHunters] = companyParties;
+
+  // Verify users exist
+  if (!player || !cpLeader) {
+    throw new Error('Failed to create required users');
+  }
+
+  // Verify company parties exist
+  if (!brazilianStorm || !eliteWarriors || !shadowHunters) {
+    throw new Error('Failed to create required company parties');
+  }
 
   // Regular Player joins Brazilian Storm
   await prisma.userCompanyParty.create({
