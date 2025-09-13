@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { zodToJsonSchema } from 'zod-to-json-schema';
 
 // Input schemas
 export const createCompanyPartySchema = z.object({
@@ -7,7 +6,10 @@ export const createCompanyPartySchema = z.object({
     .string()
     .min(3, 'Company Party name must be at least 3 characters')
     .max(50, 'Company Party name must be at most 50 characters')
-    .regex(/^[a-zA-Z0-9\s\-_]+$/, 'Company Party name can only contain letters, numbers, spaces, hyphens, and underscores'),
+    .regex(
+      /^[a-zA-Z0-9\s\-_]+$/,
+      'Company Party name can only contain letters, numbers, spaces, hyphens, and underscores'
+    ),
 });
 
 export const updateCompanyPartySchema = z.object({
@@ -15,7 +17,10 @@ export const updateCompanyPartySchema = z.object({
     .string()
     .min(3, 'Company Party name must be at least 3 characters')
     .max(50, 'Company Party name must be at most 50 characters')
-    .regex(/^[a-zA-Z0-9\s\-_]+$/, 'Company Party name can only contain letters, numbers, spaces, hyphens, and underscores')
+    .regex(
+      /^[a-zA-Z0-9\s\-_]+$/,
+      'Company Party name can only contain letters, numbers, spaces, hyphens, and underscores'
+    )
     .optional(),
 });
 
@@ -108,22 +113,16 @@ export const errorResponseSchema = z.object({
 // Type exports
 export type CreateCompanyPartyInput = z.infer<typeof createCompanyPartySchema>;
 export type UpdateCompanyPartyInput = z.infer<typeof updateCompanyPartySchema>;
-export type GetCompanyPartiesQuery = z.infer<typeof getCompanyPartiesQuerySchema>;
+export type GetCompanyPartiesQuery = z.infer<
+  typeof getCompanyPartiesQuerySchema
+>;
 export type CompanyPartyParams = z.infer<typeof companyPartyParamsSchema>;
 export type AddPlayerInput = z.infer<typeof addPlayerSchema>;
 export type PlayerParams = z.infer<typeof playerParamsSchema>;
 export type CompanyPartyResponse = z.infer<typeof companyPartyResponseSchema>;
-export type CompanyPartyListResponse = z.infer<typeof companyPartiesListResponseSchema>;
+export type CompanyPartyListResponse = z.infer<
+  typeof companyPartiesListResponseSchema
+>;
 export type UserCompanyPartyResponse = z.infer<typeof userCompanyPartySchema>;
 
-// JSON Schema exports for OpenAPI
-export const createCompanyPartyJsonSchema = zodToJsonSchema(createCompanyPartySchema, 'createCompanyPartySchema');
-export const updateCompanyPartyJsonSchema = zodToJsonSchema(updateCompanyPartySchema, 'updateCompanyPartySchema');
-export const getCompanyPartiesQueryJsonSchema = zodToJsonSchema(getCompanyPartiesQuerySchema, 'getCompanyPartiesQuerySchema');
-export const companyPartyParamsJsonSchema = zodToJsonSchema(companyPartyParamsSchema, 'companyPartyParamsSchema');
-export const addPlayerJsonSchema = zodToJsonSchema(addPlayerSchema, 'addPlayerSchema');
-export const playerParamsJsonSchema = zodToJsonSchema(playerParamsSchema, 'playerParamsSchema');
-export const companyPartyResponseJsonSchema = zodToJsonSchema(companyPartyResponseSchema, 'companyPartyResponseSchema');
-export const companyPartiesListResponseJsonSchema = zodToJsonSchema(companyPartiesListResponseSchema, 'companyPartiesListResponseSchema');
-export const userCompanyPartyJsonSchema = zodToJsonSchema(userCompanyPartySchema, 'userCompanyPartySchema');
-export const errorResponseJsonSchema = zodToJsonSchema(errorResponseSchema, 'errorResponseSchema');
+// JSON Schema exports removed - Swagger disabled

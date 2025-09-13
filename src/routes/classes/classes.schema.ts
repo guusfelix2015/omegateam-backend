@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { zodToJsonSchema } from 'zod-to-json-schema';
 
 // Base classe schema
 export const classeSchema = z.object({
@@ -29,13 +28,4 @@ export type Classe = z.infer<typeof classeSchema>;
 export type ClasseResponse = z.infer<typeof classeResponseSchema>;
 export type ClassesListResponse = z.infer<typeof classesListResponseSchema>;
 
-// JSON Schema exports for OpenAPI
-export const classeJsonSchema = zodToJsonSchema(classeResponseSchema, 'Classe');
-export const classesListResponseJsonSchema = zodToJsonSchema(
-  classesListResponseSchema,
-  'ClassesListResponse'
-);
-export const errorResponseJsonSchema = zodToJsonSchema(
-  errorResponseSchema,
-  'ErrorResponse'
-);
+// JSON Schema exports removed - Swagger disabled

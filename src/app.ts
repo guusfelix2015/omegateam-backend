@@ -7,7 +7,6 @@ import { authenticate, requireAdmin, requirePlayer } from '@/libs/auth.ts';
 // Plugins
 import prismaPlugin from '@/plugins/prisma.ts';
 import securityPlugin from '@/plugins/security.ts';
-import swaggerPlugin from '@/plugins/swagger.ts';
 
 // Routes
 import indexRoutes from '@/routes/index.ts';
@@ -40,7 +39,6 @@ export async function createApp(): Promise<FastifyInstance> {
   // Register plugins
   await app.register(prismaPlugin);
   await app.register(securityPlugin);
-  await app.register(swaggerPlugin);
 
   // Decorate with auth middleware
   app.decorate('authenticate', authenticate);

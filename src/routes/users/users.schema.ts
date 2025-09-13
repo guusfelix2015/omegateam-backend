@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { zodToJsonSchema } from 'zod-to-json-schema';
 
 // User role enum
 export const userRoleSchema = z.enum(['ADMIN', 'PLAYER', 'CP_LEADER']);
@@ -46,15 +45,16 @@ export const userSchema = z.object({
 // Other fields (including classe) will be filled by user later
 export const createUserSchema = z.object({
   email: z.string().email('Invalid email format'),
-  password: z
-    .string()
-    .min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
   name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
   nickname: z
     .string()
     .min(1, 'Nickname is required')
     .max(50, 'Nickname too long')
-    .regex(/^[a-zA-Z0-9_]+$/, 'Nickname can only contain letters, numbers, and underscores'),
+    .regex(
+      /^[a-zA-Z0-9_]+$/,
+      'Nickname can only contain letters, numbers, and underscores'
+    ),
   // Optional fields - user can set these later
   avatar: z.string().url('Invalid avatar URL').optional(),
   isActive: z.boolean().default(true),
@@ -75,7 +75,10 @@ export const updateUserSchema = z.object({
     .string()
     .min(1, 'Nickname is required')
     .max(50, 'Nickname too long')
-    .regex(/^[a-zA-Z0-9_]+$/, 'Nickname can only contain letters, numbers, and underscores')
+    .regex(
+      /^[a-zA-Z0-9_]+$/,
+      'Nickname can only contain letters, numbers, and underscores'
+    )
     .optional(),
   password: z
     .string()
@@ -100,7 +103,10 @@ export const updateProfileSchema = z.object({
     .string()
     .min(1, 'Nickname is required')
     .max(50, 'Nickname too long')
-    .regex(/^[a-zA-Z0-9_]+$/, 'Nickname can only contain letters, numbers, and underscores')
+    .regex(
+      /^[a-zA-Z0-9_]+$/,
+      'Nickname can only contain letters, numbers, and underscores'
+    )
     .optional(),
   password: z
     .string()
@@ -118,7 +124,9 @@ export const getUsersQuerySchema = z.object({
   search: z.string().optional(),
   isActive: z.coerce.boolean().optional(),
   role: userRoleSchema.optional(),
-  sortBy: z.enum(['name', 'email', 'nickname', 'lvl', 'createdAt']).default('createdAt'),
+  sortBy: z
+    .enum(['name', 'email', 'nickname', 'lvl', 'createdAt'])
+    .default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
 });
 
@@ -176,29 +184,4 @@ export type UserParams = z.infer<typeof userParamsSchema>;
 export type UserResponse = z.infer<typeof userResponseSchema>;
 export type UsersListResponse = z.infer<typeof usersListResponseSchema>;
 
-// JSON Schema exports for OpenAPI
-export const userJsonSchema = zodToJsonSchema(userResponseSchema, 'User');
-export const createUserJsonSchema = zodToJsonSchema(
-  createUserSchema,
-  'CreateUser'
-);
-export const updateUserJsonSchema = zodToJsonSchema(
-  updateUserSchema,
-  'UpdateUser'
-);
-export const updateProfileJsonSchema = zodToJsonSchema(
-  updateProfileSchema,
-  'UpdateProfile'
-);
-export const getUsersQueryJsonSchema = zodToJsonSchema(
-  getUsersQuerySchema,
-  'GetUsersQuery'
-);
-export const usersListResponseJsonSchema = zodToJsonSchema(
-  usersListResponseSchema,
-  'UsersListResponse'
-);
-export const errorResponseJsonSchema = zodToJsonSchema(
-  errorResponseSchema,
-  'ErrorResponse'
-);
+// JSON Schema exports removed - Swagger disabled
