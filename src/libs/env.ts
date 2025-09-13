@@ -23,10 +23,6 @@ const envSchema = z.object({
   RATE_LIMIT_MAX: z.coerce.number().default(100),
   RATE_LIMIT_WINDOW: z.coerce.number().default(60000), // 1 minute
 
-  // Swagger
-  SWAGGER_ENABLED: z.coerce.boolean().default(false),
-  SWAGGER_AUTH_REQUIRED: z.coerce.boolean().default(false),
-
   // Logging
   LOG_LEVEL: z
     .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace'])
