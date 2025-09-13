@@ -12,7 +12,7 @@ import securityPlugin from '@/plugins/security.ts';
 import indexRoutes from '@/routes/index.ts';
 import usersRoutes from '@/routes/users/users.routes.ts';
 import companyPartiesRoutes from '@/routes/company-parties/company-parties.routes.ts';
-import { classesRoutes } from '@/routes/classes/classes.routes.ts';
+import classesRoutes from '@/routes/classes/classes.routes.ts';
 
 export async function createApp(): Promise<FastifyInstance> {
   const app = Fastify({

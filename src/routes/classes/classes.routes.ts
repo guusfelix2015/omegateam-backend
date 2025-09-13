@@ -1,14 +1,15 @@
-import { FastifyInstance } from 'fastify';
+import type { FastifyPluginAsync } from 'fastify';
 import { ClassesService } from './classes.service';
 import {
   classesListResponseSchema,
   classeResponseSchema,
 } from './classes.schema';
 
-export function classesRoutes(fastify: FastifyInstance) {
+// eslint-disable-next-line @typescript-eslint/require-await
+const classesRoutes: FastifyPluginAsync = async fastify => {
   const classesService = new ClassesService(fastify.prisma);
 
-  fastify.get('/', async (request, reply) => {
+  fastify.get('/', async (_request, reply) => {
     try {
       const classes = await classesService.getAllClasses();
 
@@ -76,4 +77,6 @@ export function classesRoutes(fastify: FastifyInstance) {
       });
     }
   });
-}
+};
+
+export default classesRoutes;
