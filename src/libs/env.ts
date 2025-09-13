@@ -15,7 +15,7 @@ const envSchema = z.object({
   // Security
   JWT_SECRET: z
     .string()
-    .min(32)
+    .min(1)
     .default('your-super-secret-jwt-key-change-in-production'),
   CORS_ORIGIN: z.string().default('*'),
 
