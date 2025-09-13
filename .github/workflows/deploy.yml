@@ -138,25 +138,43 @@ jobs:
             echo "Current working directory: $(pwd)"
             echo "Full path to compose file: $(realpath docker-compose.production.yml)"
 
-            # Check Docker installation type and handle Snap limitations
-            if command -v snap >/dev/null 2>&1 && snap list docker >/dev/null 2>&1; then
-              echo "🐳 Docker installed via Snap detected - using workaround"
-              # For Snap Docker, we need to work from the directory containing the compose file
+            # Debug Docker installation
+            echo "🔍 Docker Debug Information:"
+            echo "Docker version: $(docker --version)"
+            echo "Docker Compose version: $(docker compose version)"
+            echo "Current directory: $(pwd)"
+            echo "Docker daemon status:"
+            docker info 2>&1 | head -5 || echo "Docker daemon might not be running"
+
+            # Test Docker Compose with the file
+            echo "🧪 Testing Docker Compose configuration..."
+
+            # Set compose file (try relative path first as we're in the correct directory)
+            COMPOSE_FILE="docker-compose.production.yml"
+
+            # Determine which docker compose command to use
+            if command -v docker-compose >/dev/null 2>&1; then
+              DOCKER_COMPOSE_CMD="docker-compose"
+              echo "📦 Using docker-compose standalone"
+            elif docker compose version >/dev/null 2>&1; then
               DOCKER_COMPOSE_CMD="docker compose"
-              USE_RELATIVE_PATH=true
+              echo "📦 Using docker compose plugin"
             else
-              echo "🐳 Using standard Docker installation"
-              DOCKER_COMPOSE_CMD="docker compose"
-              USE_RELATIVE_PATH=false
+              echo "❌ Neither docker-compose nor docker compose found"
+              exit 1
             fi
 
-            # Set the compose file path based on installation type
-            if [ "$USE_RELATIVE_PATH" = true ]; then
-              COMPOSE_FILE="docker-compose.production.yml"
-              echo "📁 Using relative compose file: $COMPOSE_FILE (from $(pwd))"
+            echo "📁 Testing with compose file: $COMPOSE_FILE"
+            if $DOCKER_COMPOSE_CMD -f "$COMPOSE_FILE" config >/dev/null 2>&1; then
+              echo "✅ Docker Compose configuration is valid"
             else
-              COMPOSE_FILE="/var/www/lineage-cp-backend/docker-compose.production.yml"
-              echo "📁 Using absolute compose file: $COMPOSE_FILE"
+              echo "❌ Docker Compose configuration test failed"
+              echo "Error details:"
+              $DOCKER_COMPOSE_CMD -f "$COMPOSE_FILE" config 2>&1 || true
+              echo ""
+              echo "File content preview:"
+              head -10 "$COMPOSE_FILE"
+              exit 1
             fi
 
             # Set environment variables for Docker Compose
