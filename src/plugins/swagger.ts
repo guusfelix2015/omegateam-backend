@@ -78,8 +78,7 @@ const swaggerPlugin: FastifyPluginAsync = async fastify => {
         }
       },
     },
-    staticCSP: true,
-    transformStaticCSP: header => header,
+    staticCSP: false,
   });
 
   fastify.log.info('📚 Swagger documentation available at /docs');
