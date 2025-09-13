@@ -183,5 +183,3 @@ export type GetUsersQuery = z.infer<typeof getUsersQuerySchema>;
 export type UserParams = z.infer<typeof userParamsSchema>;
 export type UserResponse = z.infer<typeof userResponseSchema>;
 export type UsersListResponse = z.infer<typeof usersListResponseSchema>;
-
-// JSON Schema exports removed - Swagger disabled

@@ -1,7 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { UsersController } from './users.controller.ts';
 import { UserService } from '@/modules/users/user.service.ts';
-// JSON Schema imports removed - Swagger disabled
 import type {
   CreateUserInput,
   UpdateUserInput,

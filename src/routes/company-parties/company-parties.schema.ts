@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-// Input schemas
 export const createCompanyPartySchema = z.object({
   name: z
     .string()
@@ -43,7 +42,6 @@ export const playerParamsSchema = z.object({
   playerId: z.string().cuid('Invalid Player ID format'),
 });
 
-// Response schemas
 export const userInCompanyPartySchema = z.object({
   id: z.string(),
   email: z.string(),
@@ -66,7 +64,7 @@ export const companyPartyResponseSchema = z.object({
   name: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),
-  users: z.array(userInCompanyPartySchema), // Use flattened user schema directly
+  users: z.array(userInCompanyPartySchema),
 });
 
 export const companyPartyListItemSchema = z.object({
@@ -110,7 +108,6 @@ export const errorResponseSchema = z.object({
   }),
 });
 
-// Type exports
 export type CreateCompanyPartyInput = z.infer<typeof createCompanyPartySchema>;
 export type UpdateCompanyPartyInput = z.infer<typeof updateCompanyPartySchema>;
 export type GetCompanyPartiesQuery = z.infer<
@@ -124,5 +121,3 @@ export type CompanyPartyListResponse = z.infer<
   typeof companyPartiesListResponseSchema
 >;
 export type UserCompanyPartyResponse = z.infer<typeof userCompanyPartySchema>;
-
-// JSON Schema exports removed - Swagger disabled

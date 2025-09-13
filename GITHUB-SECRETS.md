@@ -82,11 +82,6 @@ Este documento explica como configurar os GitHub Secrets necessários para o dep
     - **Descrição**: Janela de tempo para rate limiting (em milissegundos)
     - **Padrão**: `60000` (1 minuto)
 
-13. **`SWAGGER_ENABLED`** (opcional)
-    - **Descrição**: Habilitar documentação Swagger em produção
-    - **Valores**: `true` ou `false`
-    - **Padrão**: `false` (recomendado para produção)
-
 ## 🛠️ Como Configurar os Secrets
 
 ### 1. Acessar as Configurações do Repositório
@@ -136,7 +131,6 @@ CORS_ORIGIN=https://yourdomain.com
 LOG_LEVEL=info
 RATE_LIMIT_MAX=100
 RATE_LIMIT_WINDOW=60000
-SWAGGER_ENABLED=false
 ```
 
 ## 🔒 Boas Práticas de Segurança

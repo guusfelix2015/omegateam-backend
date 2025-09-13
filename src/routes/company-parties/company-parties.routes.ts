@@ -12,17 +12,12 @@ import {
 } from './company-parties.schema.ts';
 
 const companyPartiesRoutes: FastifyPluginAsync = async fastify => {
-  // Initialize dependencies
   const companyPartyRepository = new CompanyPartyRepository(fastify.prisma);
-  const companyPartyService = new CompanyPartyService(
-    companyPartyRepository,
-    fastify.prisma
-  );
+  const companyPartyService = new CompanyPartyService(companyPartyRepository);
   const companyPartiesController = new CompanyPartiesController(
     companyPartyService
   );
 
-  // GET /company-parties - List all company parties with pagination and search
   fastify.get<{ Querystring: GetCompanyPartiesQuery }>('/', {
     preValidation: [fastify.authenticate],
     handler: async (request, reply) => {
@@ -30,7 +25,6 @@ const companyPartiesRoutes: FastifyPluginAsync = async fastify => {
     },
   });
 
-  // GET /company-parties/:id - Get specific company party with player details
   fastify.get<{ Params: CompanyPartyParams }>('/:id', {
     preValidation: [fastify.authenticate],
     handler: async (request, reply) => {
@@ -38,7 +32,6 @@ const companyPartiesRoutes: FastifyPluginAsync = async fastify => {
     },
   });
 
-  // POST /company-parties - Create new company party (ADMIN only)
   fastify.post<{ Body: CreateCompanyPartyInput }>('/', {
     preValidation: [fastify.authenticate, fastify.requireAdmin],
     handler: async (request, reply) => {
@@ -46,18 +39,16 @@ const companyPartiesRoutes: FastifyPluginAsync = async fastify => {
     },
   });
 
-  // PUT /company-parties/:id - Update company party name (ADMIN only)
-  fastify.put<{ Params: CompanyPartyParams; Body: UpdateCompanyPartyInput }>(
-    '/:id',
-    {
-      preValidation: [fastify.authenticate, fastify.requireAdmin],
-      handler: async (request, reply) => {
-        return companyPartiesController.updateCompanyParty(request, reply);
-      },
-    }
-  );
+  fastify.put<{
+    Params: CompanyPartyParams;
+    Body: UpdateCompanyPartyInput;
+  }>('/:id', {
+    preValidation: [fastify.authenticate, fastify.requireAdmin],
+    handler: async (request, reply) => {
+      return companyPartiesController.updateCompanyParty(request, reply);
+    },
+  });
 
-  // DELETE /company-parties/:id - Delete company party (ADMIN only)
   fastify.delete<{ Params: CompanyPartyParams }>('/:id', {
     preValidation: [fastify.authenticate, fastify.requireAdmin],
     handler: async (request, reply) => {
@@ -65,7 +56,6 @@ const companyPartiesRoutes: FastifyPluginAsync = async fastify => {
     },
   });
 
-  // POST /company-parties/:id/players - Add player to company party (ADMIN only)
   fastify.post<{ Params: CompanyPartyParams; Body: AddPlayerInput }>(
     '/:id/players',
     {
@@ -76,7 +66,6 @@ const companyPartiesRoutes: FastifyPluginAsync = async fastify => {
     }
   );
 
-  // DELETE /company-parties/:id/players/:playerId - Remove player from company party (ADMIN only)
   fastify.delete<{ Params: CompanyPartyParams & PlayerParams }>(
     '/:id/players/:playerId',
     {

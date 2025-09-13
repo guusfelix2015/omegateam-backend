@@ -44,7 +44,7 @@ Este guia explica como configurar o deployment usando autenticação SSH com usu
 10. **`LOG_LEVEL`** - `info` (padrão)
 11. **`RATE_LIMIT_MAX`** - `100` (padrão)
 12. **`RATE_LIMIT_WINDOW`** - `60000` (padrão)
-13. **`SWAGGER_ENABLED`** - `false` (padrão)
+
 
 ## 🛠️ Configuração do Servidor
 

@@ -34,9 +34,9 @@ const prismaPlugin: FastifyPluginAsync = async fastify => {
   // Test connection
   try {
     await prisma.$connect();
-    fastify.log.info('✅ Database connected successfully');
+    fastify.log.info('Database connected successfully');
   } catch (error) {
-    fastify.log.error('❌ Database connection failed');
+    fastify.log.error('Database connection failed');
     fastify.log.error(error);
     throw error;
   }

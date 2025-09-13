@@ -8,7 +8,6 @@ import {
 export function classesRoutes(fastify: FastifyInstance) {
   const classesService = new ClassesService(fastify.prisma);
 
-  // GET /classes - List all classes
   fastify.get('/', async (request, reply) => {
     try {
       const classes = await classesService.getAllClasses();
@@ -40,7 +39,6 @@ export function classesRoutes(fastify: FastifyInstance) {
     }
   });
 
-  // GET /classes/:id - Get class by ID
   fastify.get('/:id', async (request, reply) => {
     try {
       const { id } = request.params as { id: string };
