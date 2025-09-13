@@ -128,11 +128,36 @@ jobs:
             # Verify docker-compose file exists
             if [ ! -f "docker-compose.production.yml" ]; then
               echo "❌ Error: docker-compose.production.yml not found in ${{ env.DEPLOY_PATH }}"
+              echo "Current directory: $(pwd)"
+              echo "Directory contents:"
               ls -la
               exit 1
             fi
 
             echo "✅ Found docker-compose.production.yml"
+            echo "Current working directory: $(pwd)"
+            echo "Full path to compose file: $(realpath docker-compose.production.yml)"
+
+            # Check Docker installation type and handle Snap limitations
+            if command -v snap >/dev/null 2>&1 && snap list docker >/dev/null 2>&1; then
+              echo "🐳 Docker installed via Snap detected - using workaround"
+              # For Snap Docker, we need to work from the directory containing the compose file
+              DOCKER_COMPOSE_CMD="docker compose"
+              USE_RELATIVE_PATH=true
+            else
+              echo "🐳 Using standard Docker installation"
+              DOCKER_COMPOSE_CMD="docker compose"
+              USE_RELATIVE_PATH=false
+            fi
+
+            # Set the compose file path based on installation type
+            if [ "$USE_RELATIVE_PATH" = true ]; then
+              COMPOSE_FILE="docker-compose.production.yml"
+              echo "📁 Using relative compose file: $COMPOSE_FILE (from $(pwd))"
+            else
+              COMPOSE_FILE="/var/www/lineage-cp-backend/docker-compose.production.yml"
+              echo "📁 Using absolute compose file: $COMPOSE_FILE"
+            fi
 
             # Set environment variables for Docker Compose
             export DEPLOY_IMAGE="${{ needs.build.outputs.image }}"
@@ -151,10 +176,10 @@ jobs:
             docker pull "$DEPLOY_IMAGE"
 
             echo "🛑 Stopping existing containers..."
-            docker compose -f docker-compose.production.yml down || echo "No containers to stop"
+            $DOCKER_COMPOSE_CMD -f "$COMPOSE_FILE" down || echo "No containers to stop"
 
             echo "🗄️ Starting database..."
-            docker compose -f docker-compose.production.yml up -d postgres
+            $DOCKER_COMPOSE_CMD -f "$COMPOSE_FILE" up -d postgres
 
             echo "⏳ Waiting for database to be ready..."
             sleep 15
@@ -176,7 +201,7 @@ jobs:
               npx prisma migrate deploy
 
             echo "🚀 Starting application..."
-            docker compose -f docker-compose.production.yml up -d backend
+            $DOCKER_COMPOSE_CMD -f "$COMPOSE_FILE" up -d backend
 
             echo "✅ Deployment completed successfully"
           EOF
