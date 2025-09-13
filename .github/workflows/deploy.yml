@@ -86,9 +86,21 @@ jobs:
         run: |
           sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "mkdir -p ${{ env.DEPLOY_PATH }}"
 
-      - name: � Upload Docker Compose File
+      - name: 📁 Upload Docker Compose File
         run: |
+          # Verify file exists locally
+          if [ ! -f "docker-compose.production.yml" ]; then
+            echo "❌ Error: docker-compose.production.yml not found locally"
+            ls -la
+            exit 1
+          fi
+
+          echo "✅ Found docker-compose.production.yml locally"
+          echo "📁 Uploading docker-compose.production.yml to server..."
+
           sshpass -p "${{ secrets.SSH_PASSWORD }}" scp docker-compose.production.yml ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }}:${{ env.DEPLOY_PATH }}/
+
+          echo "✅ File uploaded successfully"
 
       - name: 🐳 Deploy with Docker
         env:
@@ -113,6 +125,15 @@ jobs:
             # Navigate to deployment directory
             cd ${{ env.DEPLOY_PATH }}
 
+            # Verify docker-compose file exists
+            if [ ! -f "docker-compose.production.yml" ]; then
+              echo "❌ Error: docker-compose.production.yml not found in ${{ env.DEPLOY_PATH }}"
+              ls -la
+              exit 1
+            fi
+
+            echo "✅ Found docker-compose.production.yml"
+
             # Set environment variables for Docker Compose
             export DEPLOY_IMAGE="${{ needs.build.outputs.image }}"
             export DATABASE_URL="${{ env.DATABASE_URL }}"
@@ -130,23 +151,32 @@ jobs:
             docker pull "$DEPLOY_IMAGE"
 
             echo "🛑 Stopping existing containers..."
-            docker compose -f ${{ env.DEPLOY_PATH }}/docker-compose.production.yml down || echo "No containers to stop"
+            docker compose -f docker-compose.production.yml down || echo "No containers to stop"
 
             echo "🗄️ Starting database..."
-            docker compose -f ${{ env.DEPLOY_PATH }}/docker-compose.production.yml up -d postgres
+            docker compose -f docker-compose.production.yml up -d postgres
 
             echo "⏳ Waiting for database to be ready..."
             sleep 15
 
             echo "🗄️ Running database migrations..."
+            # Get the actual network name created by docker compose
+            NETWORK_NAME=$(docker network ls --filter name=lineage-network --format "{{.Name}}" | head -1)
+            if [ -z "$NETWORK_NAME" ]; then
+              echo "❌ Error: Could not find lineage-network"
+              docker network ls
+              exit 1
+            fi
+            echo "✅ Using network: $NETWORK_NAME"
+
             docker run --rm \
-              --network "lineage-cp-backend_lineage-network" \
+              --network "$NETWORK_NAME" \
               -e DATABASE_URL="$DATABASE_URL" \
               "$DEPLOY_IMAGE" \
               npx prisma migrate deploy
 
             echo "🚀 Starting application..."
-            docker compose -f ${{ env.DEPLOY_PATH }}/docker-compose.production.yml up -d backend
+            docker compose -f docker-compose.production.yml up -d backend
 
             echo "✅ Deployment completed successfully"
           EOF
