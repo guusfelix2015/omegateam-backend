@@ -130,23 +130,23 @@ jobs:
             docker pull "$DEPLOY_IMAGE"
 
             echo "🛑 Stopping existing containers..."
-            docker compose -f docker-compose.production.yml down || echo "No containers to stop"
+            docker compose -f ${{ env.DEPLOY_PATH }}/docker-compose.production.yml down || echo "No containers to stop"
 
             echo "🗄️ Starting database..."
-            docker compose -f docker-compose.production.yml up -d postgres
+            docker compose -f ${{ env.DEPLOY_PATH }}/docker-compose.production.yml up -d postgres
 
             echo "⏳ Waiting for database to be ready..."
             sleep 15
 
             echo "🗄️ Running database migrations..."
             docker run --rm \
-              --network "$(basename $(pwd))_lineage-network" \
+              --network "lineage-cp-backend_lineage-network" \
               -e DATABASE_URL="$DATABASE_URL" \
               "$DEPLOY_IMAGE" \
               npx prisma migrate deploy
 
             echo "🚀 Starting application..."
-            docker compose -f docker-compose.production.yml up -d backend
+            docker compose -f ${{ env.DEPLOY_PATH }}/docker-compose.production.yml up -d backend
 
             echo "✅ Deployment completed successfully"
           EOF
