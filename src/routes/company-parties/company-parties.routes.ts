@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { CompanyPartiesController } from './company-parties.controller.js';
-import { CompanyPartyService } from '@/modules/company-parties/company-party.service.js';
-import { CompanyPartyRepository } from '@/modules/company-parties/company-party.repository.js';
+import { CompanyPartiesController } from './company-parties.controller.ts';
+import { CompanyPartyService } from '@/modules/company-parties/company-party.service.ts';
+import { CompanyPartyRepository } from '@/modules/company-parties/company-party.repository.ts';
 import {
   createCompanyPartyJsonSchema,
   updateCompanyPartyJsonSchema,
@@ -16,13 +16,15 @@ import {
   type CompanyPartyParams,
   type AddPlayerInput,
   type PlayerParams,
-} from './company-parties.schema.js';
+} from './company-parties.schema.ts';
 
 // eslint-disable-next-line @typescript-eslint/require-await
-const companyPartiesRoutes: FastifyPluginAsync = async (fastify) => {
+const companyPartiesRoutes: FastifyPluginAsync = async fastify => {
   const companyPartyRepository = new CompanyPartyRepository(fastify.prisma);
   const companyPartyService = new CompanyPartyService(companyPartyRepository);
-  const companyPartiesController = new CompanyPartiesController(companyPartyService);
+  const companyPartiesController = new CompanyPartiesController(
+    companyPartyService
+  );
 
   // GET /company-parties - List all company parties with pagination and search
   fastify.get<{ Querystring: GetCompanyPartiesQuery }>('/', {
@@ -56,7 +58,8 @@ const companyPartiesRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get<{ Params: CompanyPartyParams }>('/:id', {
     preValidation: [fastify.authenticate],
     schema: {
-      description: '🏢 Get specific Company Party with detailed player information',
+      description:
+        '🏢 Get specific Company Party with detailed player information',
       summary: 'Get Company Party by ID',
       tags: ['Company Parties'],
       params: {
@@ -64,7 +67,7 @@ const companyPartiesRoutes: FastifyPluginAsync = async (fastify) => {
         properties: {
           id: {
             type: 'string',
-            description: 'Company Party unique identifier'
+            description: 'Company Party unique identifier',
           },
         },
         required: ['id'],
@@ -134,66 +137,70 @@ const companyPartiesRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // PUT /company-parties/:id - Update company party name (ADMIN only)
-  fastify.put<{ Params: CompanyPartyParams; Body: UpdateCompanyPartyInput }>('/:id', {
-    preValidation: [fastify.authenticate, fastify.requireAdmin],
-    schema: {
-      description: '🏢 Update Company Party information (ADMIN only)',
-      summary: 'Update Company Party',
-      tags: ['Company Parties'],
-      params: {
-        type: 'object',
-        properties: {
-          id: {
-            type: 'string',
+  fastify.put<{ Params: CompanyPartyParams; Body: UpdateCompanyPartyInput }>(
+    '/:id',
+    {
+      preValidation: [fastify.authenticate, fastify.requireAdmin],
+      schema: {
+        description: '🏢 Update Company Party information (ADMIN only)',
+        summary: 'Update Company Party',
+        tags: ['Company Parties'],
+        params: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
 
-            description: 'Company Party unique identifier',
-
+              description: 'Company Party unique identifier',
+            },
+          },
+          required: ['id'],
+        },
+        body: updateCompanyPartyJsonSchema,
+        response: {
+          200: {
+            description: 'Company Party updated successfully',
+            ...companyPartyResponseJsonSchema,
+          },
+          400: {
+            description: 'Bad request - Invalid input data',
+            ...errorResponseJsonSchema,
+          },
+          401: {
+            description:
+              'Unauthorized - Invalid or missing authentication token',
+            ...errorResponseJsonSchema,
+          },
+          403: {
+            description: 'Forbidden - Admin access required',
+            ...errorResponseJsonSchema,
+          },
+          404: {
+            description: 'Company Party not found',
+            ...errorResponseJsonSchema,
+          },
+          409: {
+            description: 'Conflict - Company Party name already exists',
+            ...errorResponseJsonSchema,
+          },
+          500: {
+            description: 'Internal server error',
+            ...errorResponseJsonSchema,
           },
         },
-        required: ['id'],
       },
-      body: updateCompanyPartyJsonSchema,
-      response: {
-        200: {
-          description: 'Company Party updated successfully',
-          ...companyPartyResponseJsonSchema,
-        },
-        400: {
-          description: 'Bad request - Invalid input data',
-          ...errorResponseJsonSchema,
-        },
-        401: {
-          description: 'Unauthorized - Invalid or missing authentication token',
-          ...errorResponseJsonSchema,
-        },
-        403: {
-          description: 'Forbidden - Admin access required',
-          ...errorResponseJsonSchema,
-        },
-        404: {
-          description: 'Company Party not found',
-          ...errorResponseJsonSchema,
-        },
-        409: {
-          description: 'Conflict - Company Party name already exists',
-          ...errorResponseJsonSchema,
-        },
-        500: {
-          description: 'Internal server error',
-          ...errorResponseJsonSchema,
-        },
+      handler: async (request, reply) => {
+        return companyPartiesController.updateCompanyParty(request, reply);
       },
-    },
-    handler: async (request, reply) => {
-      return companyPartiesController.updateCompanyParty(request, reply);
-    },
-  });
+    }
+  );
 
   // DELETE /company-parties/:id - Delete company party (ADMIN only)
   fastify.delete<{ Params: CompanyPartyParams }>('/:id', {
     preValidation: [fastify.authenticate, fastify.requireAdmin],
     schema: {
-      description: '🏢 Delete Company Party and remove all player associations (ADMIN only)',
+      description:
+        '🏢 Delete Company Party and remove all player associations (ADMIN only)',
       summary: 'Delete Company Party',
       tags: ['Company Parties'],
       params: {
@@ -203,7 +210,6 @@ const companyPartiesRoutes: FastifyPluginAsync = async (fastify) => {
             type: 'string',
 
             description: 'Company Party unique identifier',
-
           },
         },
         required: ['id'],
@@ -237,63 +243,67 @@ const companyPartiesRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // POST /company-parties/:id/players - Add player to company party (ADMIN only)
-  fastify.post<{ Params: CompanyPartyParams; Body: AddPlayerInput }>('/:id/players', {
-    preValidation: [fastify.authenticate, fastify.requireAdmin],
-    schema: {
-      description: '👥 Add a player to Company Party (ADMIN only)',
-      summary: 'Add Player to Company Party',
-      tags: ['Company Parties'],
-      params: {
-        type: 'object',
-        properties: {
-          id: {
-            type: 'string',
-
-            description: 'Company Party unique identifier',
-
-          },
-        },
-        required: ['id'],
-      },
-      body: addPlayerJsonSchema,
-      response: {
-        201: {
-          description: 'Player added to Company Party successfully',
+  fastify.post<{ Params: CompanyPartyParams; Body: AddPlayerInput }>(
+    '/:id/players',
+    {
+      preValidation: [fastify.authenticate, fastify.requireAdmin],
+      schema: {
+        description: '👥 Add a player to Company Party (ADMIN only)',
+        summary: 'Add Player to Company Party',
+        tags: ['Company Parties'],
+        params: {
           type: 'object',
           properties: {
-            message: { type: 'string' },
+            id: {
+              type: 'string',
+
+              description: 'Company Party unique identifier',
+            },
+          },
+          required: ['id'],
+        },
+        body: addPlayerJsonSchema,
+        response: {
+          201: {
+            description: 'Player added to Company Party successfully',
+            type: 'object',
+            properties: {
+              message: { type: 'string' },
+            },
+          },
+          400: {
+            description: 'Bad request - Invalid input data',
+            ...errorResponseJsonSchema,
+          },
+          401: {
+            description:
+              'Unauthorized - Invalid or missing authentication token',
+            ...errorResponseJsonSchema,
+          },
+          403: {
+            description: 'Forbidden - Admin access required',
+            ...errorResponseJsonSchema,
+          },
+          404: {
+            description: 'Company Party or User not found',
+            ...errorResponseJsonSchema,
+          },
+          409: {
+            description:
+              'Conflict - Player is already a member of this Company Party',
+            ...errorResponseJsonSchema,
+          },
+          500: {
+            description: 'Internal server error',
+            ...errorResponseJsonSchema,
           },
         },
-        400: {
-          description: 'Bad request - Invalid input data',
-          ...errorResponseJsonSchema,
-        },
-        401: {
-          description: 'Unauthorized - Invalid or missing authentication token',
-          ...errorResponseJsonSchema,
-        },
-        403: {
-          description: 'Forbidden - Admin access required',
-          ...errorResponseJsonSchema,
-        },
-        404: {
-          description: 'Company Party or User not found',
-          ...errorResponseJsonSchema,
-        },
-        409: {
-          description: 'Conflict - Player is already a member of this Company Party',
-          ...errorResponseJsonSchema,
-        },
-        500: {
-          description: 'Internal server error',
-          ...errorResponseJsonSchema,
-        },
       },
-    },
-    handler: async (request, reply) => {
-      return companyPartiesController.addPlayerToCompanyParty(request, reply);
-    },
-  });
+      handler: async (request, reply) => {
+        return companyPartiesController.addPlayerToCompanyParty(request, reply);
+      },
+    }
+  );
 
   // DELETE /company-parties/:id/players/:playerId - Remove player from company party (ADMIN only)
   fastify.delete<{ Params: PlayerParams }>('/:id/players/:playerId', {
@@ -309,13 +319,11 @@ const companyPartiesRoutes: FastifyPluginAsync = async (fastify) => {
             type: 'string',
 
             description: 'Company Party unique identifier',
-
           },
           playerId: {
             type: 'string',
 
             description: 'Player (User) unique identifier',
-
           },
         },
         required: ['id', 'playerId'],
@@ -341,7 +349,8 @@ const companyPartiesRoutes: FastifyPluginAsync = async (fastify) => {
           ...errorResponseJsonSchema,
         },
         409: {
-          description: 'Conflict - Player is not a member of this Company Party',
+          description:
+            'Conflict - Player is not a member of this Company Party',
           ...errorResponseJsonSchema,
         },
         500: {
@@ -351,7 +360,10 @@ const companyPartiesRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     handler: async (request, reply) => {
-      return companyPartiesController.removePlayerFromCompanyParty(request, reply);
+      return companyPartiesController.removePlayerFromCompanyParty(
+        request,
+        reply
+      );
     },
   });
 };

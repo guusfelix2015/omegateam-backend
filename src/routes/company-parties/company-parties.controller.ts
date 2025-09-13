@@ -1,5 +1,5 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import { CompanyPartyService } from '@/modules/company-parties/company-party.service.js';
+import { CompanyPartyService } from '@/modules/company-parties/company-party.service.ts';
 import type {
   CreateCompanyPartyInput,
   UpdateCompanyPartyInput,
@@ -7,17 +7,19 @@ import type {
   CompanyPartyParams,
   AddPlayerInput,
   PlayerParams,
-} from './company-parties.schema.js';
+} from './company-parties.schema.ts';
 
 export class CompanyPartiesController {
   constructor(private companyPartyService: CompanyPartyService) {}
 
   async createCompanyParty(
     request: FastifyRequest<{ Body: CreateCompanyPartyInput }>,
-    reply: FastifyReply,
+    reply: FastifyReply
   ) {
     try {
-      const companyParty = await this.companyPartyService.createCompanyParty(request.body);
+      const companyParty = await this.companyPartyService.createCompanyParty(
+        request.body
+      );
       return reply.status(201).send(companyParty);
     } catch (error) {
       if (error instanceof Error) {
@@ -41,10 +43,12 @@ export class CompanyPartiesController {
 
   async getCompanyParties(
     request: FastifyRequest<{ Querystring: GetCompanyPartiesQuery }>,
-    reply: FastifyReply,
+    reply: FastifyReply
   ) {
     try {
-      const companyParties = await this.companyPartyService.getCompanyParties(request.query);
+      const companyParties = await this.companyPartyService.getCompanyParties(
+        request.query
+      );
       return reply.status(200).send(companyParties);
     } catch (error) {
       return reply.status(500).send({
@@ -58,11 +62,13 @@ export class CompanyPartiesController {
 
   async getCompanyPartyById(
     request: FastifyRequest<{ Params: CompanyPartyParams }>,
-    reply: FastifyReply,
+    reply: FastifyReply
   ) {
     try {
-      const companyParty = await this.companyPartyService.getCompanyPartyById(request.params.id);
-      
+      const companyParty = await this.companyPartyService.getCompanyPartyById(
+        request.params.id
+      );
+
       if (!companyParty) {
         return reply.status(404).send({
           error: {
@@ -84,13 +90,16 @@ export class CompanyPartiesController {
   }
 
   async updateCompanyParty(
-    request: FastifyRequest<{ Params: CompanyPartyParams; Body: UpdateCompanyPartyInput }>,
-    reply: FastifyReply,
+    request: FastifyRequest<{
+      Params: CompanyPartyParams;
+      Body: UpdateCompanyPartyInput;
+    }>,
+    reply: FastifyReply
   ) {
     try {
       const companyParty = await this.companyPartyService.updateCompanyParty(
         request.params.id,
-        request.body,
+        request.body
       );
 
       if (!companyParty) {
@@ -125,10 +134,12 @@ export class CompanyPartiesController {
 
   async deleteCompanyParty(
     request: FastifyRequest<{ Params: CompanyPartyParams }>,
-    reply: FastifyReply,
+    reply: FastifyReply
   ) {
     try {
-      const deleted = await this.companyPartyService.deleteCompanyParty(request.params.id);
+      const deleted = await this.companyPartyService.deleteCompanyParty(
+        request.params.id
+      );
 
       if (!deleted) {
         return reply.status(404).send({
@@ -151,13 +162,16 @@ export class CompanyPartiesController {
   }
 
   async addPlayerToCompanyParty(
-    request: FastifyRequest<{ Params: CompanyPartyParams; Body: AddPlayerInput }>,
-    reply: FastifyReply,
+    request: FastifyRequest<{
+      Params: CompanyPartyParams;
+      Body: AddPlayerInput;
+    }>,
+    reply: FastifyReply
   ) {
     try {
       const success = await this.companyPartyService.addPlayerToCompanyParty(
         request.params.id,
-        request.body.userId,
+        request.body.userId
       );
 
       if (!success) {
@@ -202,13 +216,14 @@ export class CompanyPartiesController {
 
   async removePlayerFromCompanyParty(
     request: FastifyRequest<{ Params: PlayerParams }>,
-    reply: FastifyReply,
+    reply: FastifyReply
   ) {
     try {
-      const success = await this.companyPartyService.removePlayerFromCompanyParty(
-        request.params.id,
-        request.params.playerId,
-      );
+      const success =
+        await this.companyPartyService.removePlayerFromCompanyParty(
+          request.params.id,
+          request.params.playerId
+        );
 
       if (!success) {
         return reply.status(500).send({

@@ -1,9 +1,9 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { login } from '@/libs/auth.js';
+import { login } from '@/libs/auth.ts';
 import { z } from 'zod';
 
 // eslint-disable-next-line @typescript-eslint/require-await
-const indexRoutes: FastifyPluginAsync = async (fastify) => {
+const indexRoutes: FastifyPluginAsync = async fastify => {
   // Health check endpoint
   fastify.get('/health', {
     schema: {
@@ -247,15 +247,15 @@ const indexRoutes: FastifyPluginAsync = async (fastify) => {
         ...user,
         createdAt: user.createdAt.toISOString(),
         updatedAt: user.updatedAt.toISOString(),
-        classe: user.classe ? {
-          ...user.classe,
-          createdAt: user.classe.createdAt.toISOString(),
-        } : null,
+        classe: user.classe
+          ? {
+              ...user.classe,
+              createdAt: user.classe.createdAt.toISOString(),
+            }
+          : null,
       });
     },
   });
-
-
 };
 
 export default indexRoutes;

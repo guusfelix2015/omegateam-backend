@@ -1,19 +1,19 @@
 import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
-import { env, isDev } from '@/libs/env.js';
-import { errorHandler } from '@/libs/errors.js';
-import { authenticate, requireAdmin, requirePlayer } from '@/libs/auth.js';
+import { env, isDev } from '@/libs/env.ts';
+import { errorHandler } from '@/libs/errors.ts';
+import { authenticate, requireAdmin, requirePlayer } from '@/libs/auth.ts';
 
 // Plugins
-import prismaPlugin from '@/plugins/prisma.js';
-import securityPlugin from '@/plugins/security.js';
-import swaggerPlugin from '@/plugins/swagger.js';
+import prismaPlugin from '@/plugins/prisma.ts';
+import securityPlugin from '@/plugins/security.ts';
+import swaggerPlugin from '@/plugins/swagger.ts';
 
 // Routes
-import indexRoutes from '@/routes/index.js';
-import usersRoutes from '@/routes/users/users.routes.js';
-import companyPartiesRoutes from '@/routes/company-parties/company-parties.routes.js';
-import { classesRoutes } from '@/routes/classes/classes.routes.js';
+import indexRoutes from '@/routes/index.ts';
+import usersRoutes from '@/routes/users/users.routes.ts';
+import companyPartiesRoutes from '@/routes/company-parties/company-parties.routes.ts';
+import { classesRoutes } from '@/routes/classes/classes.routes.ts';
 
 export async function createApp(): Promise<FastifyInstance> {
   const app = Fastify({
@@ -21,13 +21,13 @@ export async function createApp(): Promise<FastifyInstance> {
       level: env.LOG_LEVEL,
       transport: isDev
         ? {
-          target: 'pino-pretty',
-          options: {
-            colorize: true,
-            translateTime: 'HH:MM:ss Z',
-            ignore: 'pid,hostname',
-          },
-        }
+            target: 'pino-pretty',
+            options: {
+              colorize: true,
+              translateTime: 'HH:MM:ss Z',
+              ignore: 'pid,hostname',
+            },
+          }
         : undefined,
     },
     disableRequestLogging: !isDev,

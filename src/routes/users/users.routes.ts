@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { UsersController } from './users.controller.js';
-import { UserService } from '@/modules/users/user.service.js';
+import { UsersController } from './users.controller.ts';
+import { UserService } from '@/modules/users/user.service.ts';
 import {
   createUserJsonSchema,
   updateUserJsonSchema,
@@ -19,7 +19,7 @@ import type {
 } from './users.schema.js';
 
 // eslint-disable-next-line @typescript-eslint/require-await
-const usersRoutes: FastifyPluginAsync = async (fastify) => {
+const usersRoutes: FastifyPluginAsync = async fastify => {
   const userService = new UserService(fastify.prisma);
   const usersController = new UsersController(userService);
 

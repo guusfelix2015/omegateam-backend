@@ -4,8 +4,8 @@ import type {
   CreateUserInput,
   UpdateUserInput,
   GetUsersQuery,
-} from '@/routes/users/users.schema.js';
-import { NotFoundError, ConflictError } from '@/libs/errors.js';
+} from '@/routes/users/users.schema.ts';
+import { NotFoundError, ConflictError } from '@/libs/errors.ts';
 
 type UserWithClasse = Omit<User, 'password'> & {
   classe: {
@@ -16,7 +16,7 @@ type UserWithClasse = Omit<User, 'password'> & {
 };
 
 export class UserRepository {
-  constructor(private prisma: PrismaClient) { }
+  constructor(private prisma: PrismaClient) {}
 
   async findMany(query: GetUsersQuery) {
     const { page, limit, search, isActive, role, sortBy, sortOrder } = query;
@@ -137,7 +137,9 @@ export class UserRepository {
     });
   }
 
-  async findByNickname(nickname: string): Promise<Omit<User, 'password'> | null> {
+  async findByNickname(
+    nickname: string
+  ): Promise<Omit<User, 'password'> | null> {
     const user = await this.prisma.user.findUnique({
       where: { nickname },
       select: {
@@ -195,10 +197,7 @@ export class UserRepository {
     }
   }
 
-  async update(
-    id: string,
-    data: UpdateUserInput
-  ): Promise<UserWithClasse> {
+  async update(id: string, data: UpdateUserInput): Promise<UserWithClasse> {
     try {
       const user = await this.prisma.user.update({
         where: { id },

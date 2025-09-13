@@ -1,5 +1,5 @@
-import { createApp } from './app.js';
-import { env } from '@/libs/env.js';
+import { createApp } from './app.ts';
+import { env } from '@/libs/env.ts';
 
 async function start() {
   let app;

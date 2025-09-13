@@ -3,7 +3,7 @@ import fp from 'fastify-plugin';
 import helmet from '@fastify/helmet';
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
-import { env } from '@/libs/env.js';
+import { env } from '@/libs/env.ts';
 
 const securityPlugin: FastifyPluginAsync = async fastify => {
   // Helmet for security headers

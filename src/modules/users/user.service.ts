@@ -6,10 +6,10 @@ import type {
   GetUsersQuery,
   UserResponse,
   UsersListResponse,
-} from '@/routes/users/users.schema.js';
-import { UserRepository } from './user.repository.js';
-import { CompanyPartyRepository } from '@/modules/company-parties/company-party.repository.js';
-import { NotFoundError } from '@/libs/errors.js';
+} from '@/routes/users/users.schema.ts';
+import { UserRepository } from './user.repository.ts';
+import { CompanyPartyRepository } from '@/modules/company-parties/company-party.repository.ts';
+import { NotFoundError } from '@/libs/errors.ts';
 
 export class UserService {
   private userRepository: UserRepository;
@@ -28,10 +28,12 @@ export class UserService {
         ...user,
         createdAt: user.createdAt.toISOString(),
         updatedAt: user.updatedAt.toISOString(),
-        classe: user.classe ? {
-          ...user.classe,
-          createdAt: user.classe.createdAt.toISOString(),
-        } : null,
+        classe: user.classe
+          ? {
+              ...user.classe,
+              createdAt: user.classe.createdAt.toISOString(),
+            }
+          : null,
       })),
       pagination: {
         page: query.page,
@@ -51,27 +53,31 @@ export class UserService {
       throw new NotFoundError('User');
     }
 
-    const userWithCPs = await this.companyPartyRepository.getUserWithCompanyParties(id);
-    const companyParties = userWithCPs?.companyParties.map(userCP => ({
-      id: userCP.id,
-      companyPartyId: userCP.companyPartyId,
-      joinedAt: userCP.joinedAt.toISOString(),
-      companyParty: {
-        id: userCP.companyParty.id,
-        name: userCP.companyParty.name,
-        createdAt: userCP.companyParty.createdAt.toISOString(),
-        updatedAt: userCP.companyParty.updatedAt.toISOString(),
-      },
-    })) ?? [];
+    const userWithCPs =
+      await this.companyPartyRepository.getUserWithCompanyParties(id);
+    const companyParties =
+      userWithCPs?.companyParties.map(userCP => ({
+        id: userCP.id,
+        companyPartyId: userCP.companyPartyId,
+        joinedAt: userCP.joinedAt.toISOString(),
+        companyParty: {
+          id: userCP.companyParty.id,
+          name: userCP.companyParty.name,
+          createdAt: userCP.companyParty.createdAt.toISOString(),
+          updatedAt: userCP.companyParty.updatedAt.toISOString(),
+        },
+      })) ?? [];
 
     return {
       ...user,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
-      classe: user.classe ? {
-        ...user.classe,
-        createdAt: user.classe.createdAt.toISOString(),
-      } : null,
+      classe: user.classe
+        ? {
+            ...user.classe,
+            createdAt: user.classe.createdAt.toISOString(),
+          }
+        : null,
       companyParties,
     };
   }
@@ -105,10 +111,12 @@ export class UserService {
       ...user,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
-      classe: user.classe ? {
-        ...user.classe,
-        createdAt: user.classe.createdAt.toISOString(),
-      } : null,
+      classe: user.classe
+        ? {
+            ...user.classe,
+            createdAt: user.classe.createdAt.toISOString(),
+          }
+        : null,
     };
   }
 
@@ -140,24 +148,31 @@ export class UserService {
       classeId: user.classeId,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
-      classe: user.classe ? {
-        ...user.classe,
-        createdAt: user.classe.createdAt.toISOString(),
-      } : null,
+      classe: user.classe
+        ? {
+            ...user.classe,
+            createdAt: user.classe.createdAt.toISOString(),
+          }
+        : null,
     };
   }
 
-  async updateProfile(id: string, data: UpdateProfileInput): Promise<UserResponse> {
+  async updateProfile(
+    id: string,
+    data: UpdateProfileInput
+  ): Promise<UserResponse> {
     const user = await this.userRepository.update(id, data);
 
     return {
       ...user,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
-      classe: user.classe ? {
-        ...user.classe,
-        createdAt: user.classe.createdAt.toISOString(),
-      } : null,
+      classe: user.classe
+        ? {
+            ...user.classe,
+            createdAt: user.classe.createdAt.toISOString(),
+          }
+        : null,
     };
   }
 

@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import fp from 'fastify-plugin';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
-import { env } from '@/libs/env.js';
+import { env } from '@/libs/env.ts';
 
 const swaggerPlugin: FastifyPluginAsync = async fastify => {
   if (!env.SWAGGER_ENABLED) {

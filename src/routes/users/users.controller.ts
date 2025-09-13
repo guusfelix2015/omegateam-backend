@@ -5,8 +5,8 @@ import type {
   UpdateProfileInput,
   GetUsersQuery,
   UserParams,
-} from './users.schema.js';
-import { UserService } from '@/modules/users/user.service.js';
+} from './users.schema.ts';
+import { UserService } from '@/modules/users/user.service.ts';
 
 export class UsersController {
   private userService: UserService;
@@ -87,10 +87,7 @@ export class UsersController {
     return reply.status(200).send(user);
   }
 
-  async getUserStats(
-    _request: FastifyRequest,
-    reply: FastifyReply
-  ) {
+  async getUserStats(_request: FastifyRequest, reply: FastifyReply) {
     const stats = await this.userService.getUserStats();
 
     return reply.status(200).send(stats);

@@ -3,7 +3,7 @@ import {
   type CreateCompanyPartyData,
   type UpdateCompanyPartyData,
   type GetCompanyPartiesOptions,
-} from './company-party.repository.js';
+} from './company-party.repository.ts';
 
 export interface CompanyPartyResponse {
   id: string;
@@ -54,9 +54,11 @@ export interface UserCompanyPartyResponse {
 }
 
 export class CompanyPartyService {
-  constructor(private companyPartyRepository: CompanyPartyRepository) { }
+  constructor(private companyPartyRepository: CompanyPartyRepository) {}
 
-  async createCompanyParty(data: CreateCompanyPartyData): Promise<CompanyPartyResponse> {
+  async createCompanyParty(
+    data: CreateCompanyPartyData
+  ): Promise<CompanyPartyResponse> {
     const existingCP = await this.companyPartyRepository.findByName(data.name);
     if (existingCP) {
       throw new Error('Company Party with this name already exists');
@@ -73,7 +75,9 @@ export class CompanyPartyService {
     };
   }
 
-  async getCompanyParties(options: GetCompanyPartiesOptions = {}): Promise<PaginatedCompanyPartiesResponse> {
+  async getCompanyParties(
+    options: GetCompanyPartiesOptions = {}
+  ): Promise<PaginatedCompanyPartiesResponse> {
     const { data, total } = await this.companyPartyRepository.findMany(options);
     const { page = 1, limit = 10 } = options;
 
@@ -125,9 +129,14 @@ export class CompanyPartyService {
     };
   }
 
-  async updateCompanyParty(id: string, data: UpdateCompanyPartyData): Promise<CompanyPartyResponse | null> {
+  async updateCompanyParty(
+    id: string,
+    data: UpdateCompanyPartyData
+  ): Promise<CompanyPartyResponse | null> {
     if (data.name) {
-      const existingCP = await this.companyPartyRepository.findByName(data.name);
+      const existingCP = await this.companyPartyRepository.findByName(
+        data.name
+      );
       if (existingCP && existingCP.id !== id) {
         throw new Error('Company Party with this name already exists');
       }
@@ -145,13 +154,21 @@ export class CompanyPartyService {
     return this.companyPartyRepository.delete(id);
   }
 
-  async addPlayerToCompanyParty(companyPartyId: string, userId: string): Promise<boolean> {
-    const companyParty = await this.companyPartyRepository.findById(companyPartyId);
+  async addPlayerToCompanyParty(
+    companyPartyId: string,
+    userId: string
+  ): Promise<boolean> {
+    const companyParty =
+      await this.companyPartyRepository.findById(companyPartyId);
     if (!companyParty) {
       throw new Error('Company Party not found');
     }
 
-    const isAlreadyMember = await this.companyPartyRepository.isPlayerInCompanyParty(companyPartyId, userId);
+    const isAlreadyMember =
+      await this.companyPartyRepository.isPlayerInCompanyParty(
+        companyPartyId,
+        userId
+      );
     if (isAlreadyMember) {
       throw new Error('Player is already a member of this Company Party');
     }
@@ -159,13 +176,20 @@ export class CompanyPartyService {
     return this.companyPartyRepository.addPlayer(companyPartyId, userId);
   }
 
-  async removePlayerFromCompanyParty(companyPartyId: string, userId: string): Promise<boolean> {
-    const companyParty = await this.companyPartyRepository.findById(companyPartyId);
+  async removePlayerFromCompanyParty(
+    companyPartyId: string,
+    userId: string
+  ): Promise<boolean> {
+    const companyParty =
+      await this.companyPartyRepository.findById(companyPartyId);
     if (!companyParty) {
       throw new Error('Company Party not found');
     }
 
-    const isMember = await this.companyPartyRepository.isPlayerInCompanyParty(companyPartyId, userId);
+    const isMember = await this.companyPartyRepository.isPlayerInCompanyParty(
+      companyPartyId,
+      userId
+    );
     if (!isMember) {
       throw new Error('Player is not a member of this Company Party');
     }
@@ -173,8 +197,11 @@ export class CompanyPartyService {
     return this.companyPartyRepository.removePlayer(companyPartyId, userId);
   }
 
-  async getUserCompanyParties(userId: string): Promise<UserCompanyPartyResponse[]> {
-    const userWithCPs = await this.companyPartyRepository.getUserWithCompanyParties(userId);
+  async getUserCompanyParties(
+    userId: string
+  ): Promise<UserCompanyPartyResponse[]> {
+    const userWithCPs =
+      await this.companyPartyRepository.getUserWithCompanyParties(userId);
     if (!userWithCPs) {
       return [];
     }
