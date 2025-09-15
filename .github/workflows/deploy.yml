@@ -207,12 +207,8 @@ jobs:
               "$DEPLOY_IMAGE" \
               npx prisma migrate deploy
 
-            echo "Running database seed..."
-            docker run --rm \
-              --network "$NETWORK_NAME" \
-              -e DATABASE_URL="$DATABASE_URL" \
-              "$DEPLOY_IMAGE" \
-              node seed.js
+            echo "Database migrations completed successfully"
+            echo "Note: Seed is not run automatically to preserve production data"
 
             echo "Setting up SSL certificates..."
             if [ ! -f "nginx/ssl/fullchain.pem" ] || [ ! -f "nginx/ssl/privkey.pem" ]; then
