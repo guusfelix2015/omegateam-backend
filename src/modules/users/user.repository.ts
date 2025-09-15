@@ -16,11 +16,14 @@ type UserWithClasse = Omit<User, 'password'> & {
 };
 
 export class UserRepository {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: PrismaClient) { }
 
   async findMany(query: GetUsersQuery) {
     const { page, limit, search, isActive, role, sortBy, sortOrder } = query;
-    const skip = (page - 1) * limit;
+    // Ensure page and limit are numbers
+    const pageNum = typeof page === 'string' ? parseInt(page, 10) : page;
+    const limitNum = typeof limit === 'string' ? parseInt(limit, 10) : limit;
+    const skip = (pageNum - 1) * limitNum;
 
     const where: Prisma.UserWhereInput = {};
 
@@ -49,7 +52,7 @@ export class UserRepository {
         where,
         orderBy,
         skip: skip || 0,
-        take: limit || 10,
+        take: limitNum || 10,
         select: {
           id: true,
           email: true,
@@ -77,9 +80,9 @@ export class UserRepository {
     return {
       users,
       total,
-      totalPages: Math.ceil(total / limit),
-      hasNext: page * limit < total,
-      hasPrev: page > 1,
+      totalPages: Math.ceil(total / limitNum),
+      hasNext: pageNum * limitNum < total,
+      hasPrev: pageNum > 1,
     };
   }
 
