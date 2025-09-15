@@ -114,7 +114,7 @@ async function main() {
     }),
   ]);
 
-  // Add players to company parties
+  // Add players to cp
   const [admin, player, cpLeader] = users;
   const [brazilianStorm, eliteWarriors, shadowHunters] = companyParties;
 
@@ -123,7 +123,7 @@ async function main() {
     throw new Error('Failed to create required users');
   }
 
-  // Verify company parties exist
+  // Verify cp exist
   if (!brazilianStorm || !eliteWarriors || !shadowHunters) {
     throw new Error('Failed to create required company parties');
   }
@@ -160,7 +160,7 @@ async function main() {
   users.forEach(user => {
     console.log(`  - ${user.name} (${user.email})`);
   });
-  console.log(`Created ${companyParties.length} company parties:`);
+  console.log(`Created ${companyParties.length} cp:`);
   companyParties.forEach(cp => {
     console.log(`  - ${cp.name}`);
   });

@@ -40,9 +40,7 @@ export const userSchema = z.object({
   companyParties: z.array(userCompanyPartySchema).optional(),
 });
 
-// Create user schema (for ADMIN creating users)
-// Only email, password, name, and nickname are required
-// Other fields (including classe) will be filled by user later
+
 export const createUserSchema = z.object({
   email: z.string().email('Invalid email format'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -55,17 +53,13 @@ export const createUserSchema = z.object({
       /^[a-zA-Z0-9_]+$/,
       'Nickname can only contain letters, numbers, and underscores'
     ),
-  // Optional fields - user can set these later
   avatar: z.string().url('Invalid avatar URL').optional(),
   isActive: z.boolean().default(true),
   lvl: z.number().int().min(1).max(85).default(1),
   role: userRoleSchema.default('PLAYER'),
-  classeId: z.string().cuid().nullable().optional().transform(val => val === '' ? null : val), // User can set class later
-  // Remove companyPartyId as it doesn't exist in the User model
-  // Company parties are handled through the UserCompanyParty relation
+  classeId: z.string().cuid().nullable().optional().transform(val => val === '' ? null : val),
 });
 
-// Update user schema
 export const updateUserSchema = z.object({
   email: z.string().email('Invalid email format').optional(),
   name: z

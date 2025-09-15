@@ -160,7 +160,7 @@ async function main() {
   users.forEach(user => {
     console.log(`  - ${user.name} (${user.email})`);
   });
-  console.log(`Created ${companyParties.length} company parties:`);
+  console.log(`Created ${companyParties.length} cp:`);
   companyParties.forEach(cp => {
     console.log(`  - ${cp.name}`);
   });
