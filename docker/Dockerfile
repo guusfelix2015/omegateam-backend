@@ -31,8 +31,8 @@ RUN npm run build
 # Production stage
 FROM node:20-slim AS runner
 
-# Install OpenSSL for Prisma
-RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+# Install OpenSSL for Prisma and curl for seeding
+RUN apt-get update && apt-get install -y openssl curl && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
 RUN groupadd --gid 1001 nodejs && \
@@ -51,6 +51,9 @@ RUN npm ci --only=production && npm cache clean --force
 COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 COPY --from=builder --chown=nodejs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
+
+# Copy seed.js file for production seeding
+COPY --chown=nodejs:nodejs prisma/seed.js ./seed.js
 
 # Change ownership of the app directory
 RUN chown -R nodejs:nodejs /app
