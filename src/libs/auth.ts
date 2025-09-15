@@ -2,6 +2,7 @@ import type { FastifyRequest, FastifyReply } from 'fastify';
 import jwt from 'jsonwebtoken';
 import { UnauthorizedError } from './errors.js';
 import { env } from './env.js';
+import { PasswordUtils } from './password.js';
 
 interface TokenPayload {
   userId: string;
@@ -119,7 +120,16 @@ export async function login(
     throw new UnauthorizedError('Invalid credentials');
   }
 
-  if (!user.password || user.password !== password) {
+  if (!user.password) {
+    throw new UnauthorizedError('Invalid credentials');
+  }
+
+  // Check if password is hashed or plain text (for backward compatibility with seed data)
+  const isPasswordValid = PasswordUtils.isHashed(user.password)
+    ? await PasswordUtils.compare(password, user.password)
+    : user.password === password;
+
+  if (!isPasswordValid) {
     throw new UnauthorizedError('Invalid credentials');
   }
 

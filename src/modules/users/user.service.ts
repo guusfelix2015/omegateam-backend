@@ -10,6 +10,7 @@ import type {
 import { UserRepository } from './user.repository.ts';
 import { CompanyPartyRepository } from '@/modules/company-parties/company-party.repository.ts';
 import { NotFoundError } from '@/libs/errors.ts';
+import { PasswordUtils } from '@/libs/password.ts';
 
 export class UserService {
   private userRepository: UserRepository;
@@ -83,10 +84,19 @@ export class UserService {
   }
 
   async createUser(data: CreateUserInput): Promise<UserResponse> {
+    // Validate password
+    const passwordValidation = PasswordUtils.validatePassword(data.password);
+    if (!passwordValidation.isValid) {
+      throw new Error(`Password validation failed: ${passwordValidation.errors.join(', ')}`);
+    }
+
+    // Hash the password
+    const hashedPassword = await PasswordUtils.hash(data.password);
+
     // Clean the data to remove any invalid fields and convert empty strings to null
     const cleanData = {
       email: data.email,
-      password: data.password,
+      password: hashedPassword,
       name: data.name,
       nickname: data.nickname,
       avatar: data.avatar,
@@ -118,7 +128,17 @@ export class UserService {
       throw new NotFoundError('User');
     }
 
-    const user = await this.userRepository.update(id, data);
+    // If password is being updated, hash it
+    let updateData = { ...data };
+    if (data.password) {
+      const passwordValidation = PasswordUtils.validatePassword(data.password);
+      if (!passwordValidation.isValid) {
+        throw new Error(`Password validation failed: ${passwordValidation.errors.join(', ')}`);
+      }
+      updateData.password = await PasswordUtils.hash(data.password);
+    }
+
+    const user = await this.userRepository.update(id, updateData);
 
     return {
       ...user,
