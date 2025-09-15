@@ -239,10 +239,10 @@ jobs:
             while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
               echo "Health check attempt $ATTEMPT/$MAX_ATTEMPTS..."
 
-              # Test backend directly
-              if curl -f -s http://localhost:3000/health >/dev/null 2>&1; then
+              # Test backend through docker exec (internal network)
+              if docker exec lineage-backend-prod curl -f -s http://localhost:3000/health >/dev/null 2>&1; then
                 echo "✅ Backend is healthy and responding"
-                curl -s http://localhost:3000/health
+                docker exec lineage-backend-prod curl -s http://localhost:3000/health
 
                 # Test HTTPS through nginx
                 echo "Testing HTTPS through nginx..."
@@ -263,6 +263,8 @@ jobs:
                   docker logs lineage-backend-prod --tail 20
                   echo "Nginx logs:"
                   docker logs lineage-nginx-prod --tail 20 || echo "Could not get nginx logs"
+                  echo "Container status:"
+                  docker ps
                   exit 1
                 fi
 
