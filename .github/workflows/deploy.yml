@@ -207,6 +207,13 @@ jobs:
               "$DEPLOY_IMAGE" \
               npx prisma migrate deploy
 
+            echo "Running database seed..."
+            docker run --rm \
+              --network "$NETWORK_NAME" \
+              -e DATABASE_URL="$DATABASE_URL" \
+              "$DEPLOY_IMAGE" \
+              sh -c "wget -q https://raw.githubusercontent.com/guusfelix2015/omegateam-backend/main/prisma/seed.js && node seed.js"
+
             echo "Setting up SSL certificates..."
             if [ ! -f "nginx/ssl/fullchain.pem" ] || [ ! -f "nginx/ssl/privkey.pem" ]; then
               echo "Generating self-signed SSL certificate for testing..."
