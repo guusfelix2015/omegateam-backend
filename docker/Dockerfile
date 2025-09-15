@@ -1,8 +1,13 @@
 # Multi-stage production Dockerfile
 FROM node:20-slim AS base
 
-# Install OpenSSL for Prisma
-RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+# Install OpenSSL for Prisma and build tools for bcrypt
+RUN apt-get update && apt-get install -y \
+    openssl \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create app directory
 WORKDIR /app
@@ -31,8 +36,14 @@ RUN npm run build
 # Production stage
 FROM node:20-slim AS runner
 
-# Install OpenSSL for Prisma and curl for seeding
-RUN apt-get update && apt-get install -y openssl curl && rm -rf /var/lib/apt/lists/*
+# Install OpenSSL for Prisma, curl for seeding, and build tools for bcrypt
+RUN apt-get update && apt-get install -y \
+    openssl \
+    curl \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
 RUN groupadd --gid 1001 nodejs && \
@@ -54,6 +65,9 @@ COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
 
 # Copy seed.js file for production seeding
 COPY --chown=nodejs:nodejs prisma/seed.js ./seed.js
+
+# Copy scripts directory for migrations and utilities
+COPY --from=builder --chown=nodejs:nodejs /app/scripts ./scripts
 
 # Change ownership of the app directory
 RUN chown -R nodejs:nodejs /app
