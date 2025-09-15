@@ -1,14 +1,6 @@
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
-
-// Password utility functions
-const SALT_ROUNDS = 12;
-
-async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, SALT_ROUNDS);
-}
 
 async function main() {
   console.log('🌱 Starting seed...');
@@ -68,7 +60,7 @@ async function main() {
       email: 'admin@lineage.com',
       name: 'Admin User',
       nickname: 'Admin',
-      password: await hashPassword('admin123'),
+      password: 'admin123',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
       isActive: true,
       lvl: 85,
@@ -79,7 +71,7 @@ async function main() {
       email: 'player@lineage.com',
       name: 'Regular Player',
       nickname: 'Player',
-      password: await hashPassword('player123'),
+      password: 'player123',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=player',
       isActive: true,
       lvl: 45,
@@ -90,7 +82,7 @@ async function main() {
       email: 'leader@lineage.com',
       name: 'CP Leader',
       nickname: 'CPLeader',
-      password: await hashPassword('leader123'),
+      password: 'leader123',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=leader',
       isActive: true,
       lvl: 75,
