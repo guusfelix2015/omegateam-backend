@@ -221,6 +221,18 @@ jobs:
             echo "Starting nginx proxy..."
             $DOCKER_COMPOSE_CMD -f "$COMPOSE_FILE" up -d nginx
 
+            echo "Waiting for nginx to be ready..."
+            sleep 10
+
+            echo "Testing nginx configuration..."
+            if docker exec lineage-nginx-prod nginx -t; then
+              echo "✅ Nginx configuration is valid"
+            else
+              echo "❌ Nginx configuration has errors"
+              docker logs lineage-nginx-prod --tail 20
+              exit 1
+            fi
+
             echo "Deployment completed successfully"
           EOF
 
@@ -239,32 +251,37 @@ jobs:
             while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
               echo "Health check attempt $ATTEMPT/$MAX_ATTEMPTS..."
 
-              # Test backend through docker exec (internal network)
-              if docker exec lineage-backend-prod curl -f -s http://localhost:3000/health >/dev/null 2>&1; then
-                echo "✅ Backend is healthy and responding"
-                docker exec lineage-backend-prod curl -s http://localhost:3000/health
-
-                # Test HTTPS through nginx
-                echo "Testing HTTPS through nginx..."
-                if curl -k -f -s https://localhost/health >/dev/null 2>&1; then
-                  echo "✅ HTTPS proxy is working"
-                  curl -k -s https://localhost/health
-                else
-                  echo "⚠️  HTTPS proxy test failed, but backend is working"
-                  echo "Nginx logs:"
-                  docker logs lineage-nginx-prod --tail 10 || echo "Could not get nginx logs"
-                fi
-
+              # Test HTTPS through nginx (this is what really matters)
+              if curl -k -f -s https://localhost/health >/dev/null 2>&1; then
+                echo "✅ HTTPS proxy is working!"
+                curl -k -s https://localhost/health
+                echo "✅ Backend is accessible through nginx proxy"
                 break
               else
+                # If HTTPS fails, let's check what's happening
+                echo "HTTPS test failed, checking components..."
+
+                # Check if nginx is responding at all
+                if curl -f -s http://localhost/ >/dev/null 2>&1; then
+                  echo "✅ Nginx is responding on HTTP"
+                else
+                  echo "❌ Nginx is not responding on HTTP"
+                fi
+
+                # Check backend container health
+                BACKEND_HEALTH=$(docker inspect lineage-backend-prod --format='{{.State.Health.Status}}' 2>/dev/null || echo "unknown")
+                echo "Backend health status: $BACKEND_HEALTH"
+
                 if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
                   echo "❌ Health check failed after $MAX_ATTEMPTS attempts"
                   echo "Backend logs:"
                   docker logs lineage-backend-prod --tail 20
                   echo "Nginx logs:"
-                  docker logs lineage-nginx-prod --tail 20 || echo "Could not get nginx logs"
+                  docker logs lineage-nginx-prod --tail 20
                   echo "Container status:"
                   docker ps
+                  echo "Testing nginx config:"
+                  docker exec lineage-nginx-prod nginx -t || echo "Nginx config test failed"
                   exit 1
                 fi
 
