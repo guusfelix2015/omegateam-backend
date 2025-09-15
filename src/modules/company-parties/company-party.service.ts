@@ -8,6 +8,8 @@ import {
 export interface CompanyPartyResponse {
   id: string;
   name: string;
+  description?: string | null;
+  maxMembers?: number | null;
   createdAt: string;
   updatedAt: string;
   users: Array<{
@@ -24,6 +26,8 @@ export interface CompanyPartyResponse {
 export interface CompanyPartyListResponse {
   id: string;
   name: string;
+  description?: string | null;
+  maxMembers?: number | null;
   createdAt: string;
   updatedAt: string;
   playerCount: number;
@@ -66,6 +70,8 @@ export class CompanyPartyService {
 
     const cleanData = {
       name: data.name,
+      description: data.description,
+      maxMembers: data.maxMembers,
     };
 
     const companyParty = await this.companyPartyRepository.create(cleanData);
@@ -73,6 +79,8 @@ export class CompanyPartyService {
     return {
       id: companyParty.id,
       name: companyParty.name,
+      description: companyParty.description,
+      maxMembers: companyParty.maxMembers,
       createdAt: companyParty.createdAt.toISOString(),
       updatedAt: companyParty.updatedAt.toISOString(),
       users: [],
@@ -92,6 +100,8 @@ export class CompanyPartyService {
     const companyParties: CompanyPartyListResponse[] = data.map(cp => ({
       id: cp.id,
       name: cp.name,
+      description: cp.description,
+      maxMembers: cp.maxMembers,
       createdAt: cp.createdAt.toISOString(),
       updatedAt: cp.updatedAt.toISOString(),
       playerCount: cp.users.length,
@@ -119,6 +129,8 @@ export class CompanyPartyService {
     return {
       id: companyParty.id,
       name: companyParty.name,
+      description: companyParty.description,
+      maxMembers: companyParty.maxMembers,
       createdAt: companyParty.createdAt.toISOString(),
       updatedAt: companyParty.updatedAt.toISOString(),
       users: companyParty.users.map(userCP => ({

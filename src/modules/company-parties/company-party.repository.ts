@@ -33,10 +33,14 @@ export interface UserWithCompanyParties extends Omit<User, 'password'> {
 
 export interface CreateCompanyPartyData {
   name: string;
+  description?: string;
+  maxMembers?: number;
 }
 
 export interface UpdateCompanyPartyData {
   name?: string;
+  description?: string;
+  maxMembers?: number;
 }
 
 export interface GetCompanyPartiesOptions {

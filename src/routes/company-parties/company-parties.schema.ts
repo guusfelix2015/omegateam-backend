@@ -9,9 +9,8 @@ export const createCompanyPartySchema = z.object({
       /^[a-zA-Z0-9\s\-_]+$/,
       'Company Party name can only contain letters, numbers, spaces, hyphens, and underscores'
     ),
-  // Accept but ignore these fields for now (future features)
-  description: z.string().optional(),
-  maxMembers: z.number().optional(),
+  description: z.string().min(1, 'Description is required').max(500, 'Description too long'),
+  maxMembers: z.number().int().min(1, 'Max members must be at least 1').max(100, 'Max members cannot exceed 100'),
 });
 
 export const updateCompanyPartySchema = z.object({
@@ -24,6 +23,8 @@ export const updateCompanyPartySchema = z.object({
       'Company Party name can only contain letters, numbers, spaces, hyphens, and underscores'
     )
     .optional(),
+  description: z.string().min(1, 'Description is required').max(500, 'Description too long').optional(),
+  maxMembers: z.number().int().min(1, 'Max members must be at least 1').max(100, 'Max members cannot exceed 100').optional(),
 });
 
 export const getCompanyPartiesQuerySchema = z.object({
