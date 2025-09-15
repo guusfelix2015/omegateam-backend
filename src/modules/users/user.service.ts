@@ -30,9 +30,9 @@ export class UserService {
         updatedAt: user.updatedAt.toISOString(),
         classe: user.classe
           ? {
-              ...user.classe,
-              createdAt: user.classe.createdAt.toISOString(),
-            }
+            ...user.classe,
+            createdAt: user.classe.createdAt.toISOString(),
+          }
           : null,
       })),
       pagination: {
@@ -74,23 +74,36 @@ export class UserService {
       updatedAt: user.updatedAt.toISOString(),
       classe: user.classe
         ? {
-            ...user.classe,
-            createdAt: user.classe.createdAt.toISOString(),
-          }
+          ...user.classe,
+          createdAt: user.classe.createdAt.toISOString(),
+        }
         : null,
       companyParties,
     };
   }
 
   async createUser(data: CreateUserInput): Promise<UserResponse> {
-    if (!data.avatar) {
+    // Clean the data to remove any invalid fields and convert empty strings to null
+    const cleanData = {
+      email: data.email,
+      password: data.password,
+      name: data.name,
+      nickname: data.nickname,
+      avatar: data.avatar,
+      isActive: data.isActive,
+      lvl: data.lvl,
+      role: data.role,
+      classeId: data.classeId === '' ? null : data.classeId,
+    };
+
+    if (!cleanData.avatar) {
       const seed = encodeURIComponent(
-        data.name.toLowerCase().replace(/\s+/g, '')
+        cleanData.name.toLowerCase().replace(/\s+/g, '')
       );
-      data.avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
+      cleanData.avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
     }
 
-    const user = await this.userRepository.create(data);
+    const user = await this.userRepository.create(cleanData);
 
     return {
       ...user,
@@ -113,9 +126,9 @@ export class UserService {
       updatedAt: user.updatedAt.toISOString(),
       classe: user.classe
         ? {
-            ...user.classe,
-            createdAt: user.classe.createdAt.toISOString(),
-          }
+          ...user.classe,
+          createdAt: user.classe.createdAt.toISOString(),
+        }
         : null,
     };
   }
@@ -150,9 +163,9 @@ export class UserService {
       updatedAt: user.updatedAt.toISOString(),
       classe: user.classe
         ? {
-            ...user.classe,
-            createdAt: user.classe.createdAt.toISOString(),
-          }
+          ...user.classe,
+          createdAt: user.classe.createdAt.toISOString(),
+        }
         : null,
     };
   }
@@ -169,9 +182,9 @@ export class UserService {
       updatedAt: user.updatedAt.toISOString(),
       classe: user.classe
         ? {
-            ...user.classe,
-            createdAt: user.classe.createdAt.toISOString(),
-          }
+          ...user.classe,
+          createdAt: user.classe.createdAt.toISOString(),
+        }
         : null,
     };
   }

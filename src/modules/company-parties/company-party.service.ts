@@ -54,7 +54,7 @@ export interface UserCompanyPartyResponse {
 }
 
 export class CompanyPartyService {
-  constructor(private companyPartyRepository: CompanyPartyRepository) {}
+  constructor(private companyPartyRepository: CompanyPartyRepository) { }
 
   async createCompanyParty(
     data: CreateCompanyPartyData
@@ -64,7 +64,11 @@ export class CompanyPartyService {
       throw new Error('Company Party with this name already exists');
     }
 
-    const companyParty = await this.companyPartyRepository.create(data);
+    const cleanData = {
+      name: data.name,
+    };
+
+    const companyParty = await this.companyPartyRepository.create(cleanData);
 
     return {
       id: companyParty.id,

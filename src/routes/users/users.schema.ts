@@ -60,7 +60,9 @@ export const createUserSchema = z.object({
   isActive: z.boolean().default(true),
   lvl: z.number().int().min(1).max(85).default(1),
   role: userRoleSchema.default('PLAYER'),
-  classeId: z.string().cuid().optional(), // User can set class later
+  classeId: z.string().cuid().nullable().optional().transform(val => val === '' ? null : val), // User can set class later
+  // Remove companyPartyId as it doesn't exist in the User model
+  // Company parties are handled through the UserCompanyParty relation
 });
 
 // Update user schema

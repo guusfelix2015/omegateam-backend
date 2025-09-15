@@ -54,9 +54,76 @@ const usersRoutes: FastifyPluginAsync = async fastify => {
     },
   });
 
-  // DELETE /users/:id - Delete user
+  // DELETE /users/:id - Delete user (ADMIN only)
   fastify.delete<{ Params: UserParams }>('/:id', {
-    preValidation: [fastify.authenticate],
+    preValidation: [fastify.authenticate, fastify.requireAdmin],
+    schema: {
+      description: 'Delete user by ID (ADMIN only)',
+      tags: ['Users'],
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', description: 'User ID' },
+        },
+        required: ['id'],
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' },
+          },
+        },
+        400: {
+          type: 'object',
+          properties: {
+            error: {
+              type: 'object',
+              properties: {
+                message: { type: 'string' },
+                statusCode: { type: 'number' },
+              },
+            },
+          },
+        },
+        401: {
+          type: 'object',
+          properties: {
+            error: {
+              type: 'object',
+              properties: {
+                message: { type: 'string' },
+                statusCode: { type: 'number' },
+              },
+            },
+          },
+        },
+        403: {
+          type: 'object',
+          properties: {
+            error: {
+              type: 'object',
+              properties: {
+                message: { type: 'string' },
+                statusCode: { type: 'number' },
+              },
+            },
+          },
+        },
+        404: {
+          type: 'object',
+          properties: {
+            error: {
+              type: 'object',
+              properties: {
+                message: { type: 'string' },
+                statusCode: { type: 'number' },
+              },
+            },
+          },
+        },
+      },
+    },
     handler: async (request, reply) => {
       return usersController.deleteUser(request, reply);
     },

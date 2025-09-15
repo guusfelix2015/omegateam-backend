@@ -61,6 +61,16 @@ export class UsersController {
     request: FastifyRequest<{ Params: UserParams }>,
     reply: FastifyReply
   ) {
+    // Prevent user from deleting themselves
+    if (request.user && request.user.id === request.params.id) {
+      return reply.status(400).send({
+        error: {
+          message: 'You cannot delete your own account',
+          statusCode: 400,
+        },
+      });
+    }
+
     await this.userService.deleteUser(request.params.id);
 
     return reply.status(200).send({
