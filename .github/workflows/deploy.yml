@@ -95,6 +95,21 @@ jobs:
           sshpass -p "${{ secrets.SSH_PASSWORD }}" scp docker-compose.production.yml ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }}:${{ env.DEPLOY_PATH }}/
           echo "File uploaded successfully"
 
+      - name: Upload Nginx Configuration
+        run: |
+          echo "Creating nginx directories on server..."
+          sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "mkdir -p ${{ env.DEPLOY_PATH }}/nginx/conf.d ${{ env.DEPLOY_PATH }}/nginx/ssl"
+
+          echo "Uploading nginx configuration files..."
+          sshpass -p "${{ secrets.SSH_PASSWORD }}" scp -r nginx/ ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }}:${{ env.DEPLOY_PATH }}/
+
+          echo "Uploading SSL setup scripts..."
+          sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "mkdir -p ${{ env.DEPLOY_PATH }}/scripts"
+          sshpass -p "${{ secrets.SSH_PASSWORD }}" scp scripts/setup-ssl.sh scripts/deploy-with-ssl.sh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }}:${{ env.DEPLOY_PATH }}/scripts/
+          sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "chmod +x ${{ env.DEPLOY_PATH }}/scripts/*.sh"
+
+          echo "Nginx configuration uploaded successfully"
+
       - name: Deploy with Docker
         env:
           # Application Environment Variables from GitHub Secrets
@@ -192,8 +207,19 @@ jobs:
               "$DEPLOY_IMAGE" \
               npx prisma migrate deploy
 
+            echo "Setting up SSL certificates..."
+            if [ ! -f "nginx/ssl/fullchain.pem" ] || [ ! -f "nginx/ssl/privkey.pem" ]; then
+              echo "Generating self-signed SSL certificate for testing..."
+              bash scripts/setup-ssl.sh self-signed
+            else
+              echo "SSL certificates already exist"
+            fi
+
             echo "Starting application..."
             $DOCKER_COMPOSE_CMD -f "$COMPOSE_FILE" up -d backend
+
+            echo "Starting nginx proxy..."
+            $DOCKER_COMPOSE_CMD -f "$COMPOSE_FILE" up -d nginx
 
             echo "Deployment completed successfully"
           EOF
@@ -213,15 +239,30 @@ jobs:
             while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
               echo "Health check attempt $ATTEMPT/$MAX_ATTEMPTS..."
 
+              # Test backend directly
               if curl -f -s http://localhost:3000/health >/dev/null 2>&1; then
-                echo "Application is healthy and responding"
+                echo "✅ Backend is healthy and responding"
                 curl -s http://localhost:3000/health
+
+                # Test HTTPS through nginx
+                echo "Testing HTTPS through nginx..."
+                if curl -k -f -s https://localhost/health >/dev/null 2>&1; then
+                  echo "✅ HTTPS proxy is working"
+                  curl -k -s https://localhost/health
+                else
+                  echo "⚠️  HTTPS proxy test failed, but backend is working"
+                  echo "Nginx logs:"
+                  docker logs lineage-nginx-prod --tail 10 || echo "Could not get nginx logs"
+                fi
+
                 break
               else
                 if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
-                  echo "Health check failed after $MAX_ATTEMPTS attempts"
-                  echo "Container logs:"
+                  echo "❌ Health check failed after $MAX_ATTEMPTS attempts"
+                  echo "Backend logs:"
                   docker logs lineage-backend-prod --tail 20
+                  echo "Nginx logs:"
+                  docker logs lineage-nginx-prod --tail 20 || echo "Could not get nginx logs"
                   exit 1
                 fi
 
