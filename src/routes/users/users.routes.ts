@@ -14,6 +14,14 @@ const usersRoutes: FastifyPluginAsync = async fastify => {
   const userService = new UserService(fastify.prisma);
   const usersController = new UsersController(userService);
 
+  // GET /users/stats - Get user statistics
+  fastify.get('/stats', {
+    preValidation: [fastify.authenticate],
+    handler: async (request, reply) => {
+      return usersController.getUserStats(request, reply);
+    },
+  });
+
   // GET /users - List users with pagination and filters
   fastify.get<{ Querystring: GetUsersQuery }>('/', {
     preValidation: [fastify.authenticate],
