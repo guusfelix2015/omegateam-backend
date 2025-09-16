@@ -13,6 +13,8 @@ import indexRoutes from '@/routes/index.ts';
 import usersRoutes from '@/routes/users/users.routes.ts';
 import companyPartiesRoutes from '@/routes/company-parties/company-parties.routes.ts';
 import classesRoutes from '@/routes/classes/classes.routes.ts';
+import itemsRoutes from '@/routes/items/items.routes.ts';
+import lookupsRoutes from '@/routes/lookups/lookups.routes.ts';
 
 export async function createApp(): Promise<FastifyInstance> {
   const app = Fastify({
@@ -20,13 +22,13 @@ export async function createApp(): Promise<FastifyInstance> {
       level: env.LOG_LEVEL,
       transport: isDev
         ? {
-            target: 'pino-pretty',
-            options: {
-              colorize: true,
-              translateTime: 'HH:MM:ss Z',
-              ignore: 'pid,hostname',
-            },
-          }
+          target: 'pino-pretty',
+          options: {
+            colorize: true,
+            translateTime: 'HH:MM:ss Z',
+            ignore: 'pid,hostname',
+          },
+        }
         : undefined,
     },
     disableRequestLogging: !isDev,
@@ -50,6 +52,8 @@ export async function createApp(): Promise<FastifyInstance> {
   await app.register(usersRoutes, { prefix: '/users' });
   await app.register(companyPartiesRoutes, { prefix: '/company-parties' });
   await app.register(classesRoutes, { prefix: '/classes' });
+  await app.register(itemsRoutes, { prefix: '/items' });
+  await app.register(lookupsRoutes, { prefix: '/lookups' });
 
   // 404 handler
   app.setNotFoundHandler(async (request, reply) => {

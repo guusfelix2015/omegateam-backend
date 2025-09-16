@@ -16,6 +16,27 @@ enum UserRole {
   CP_LEADER
 }
 
+enum ItemCategory {
+  HELMET
+  ARMOR
+  PANTS
+  BOOTS
+  GLOVES
+  NECKLACE
+  EARRING
+  RING
+  SHIELD
+  WEAPON
+}
+
+enum ItemGrade {
+  D
+  C
+  B
+  A
+  S
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -73,4 +94,17 @@ model UserCompanyParty {
 
   @@unique([userId, companyPartyId])
   @@map("user_company_parties")
+}
+
+model Item {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  category    ItemCategory
+  grade       ItemGrade
+  valorGsInt  Int          @map("valor_gs_int")
+  valorDkp    Int          @map("valor_dkp")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  @@map("items")
 }

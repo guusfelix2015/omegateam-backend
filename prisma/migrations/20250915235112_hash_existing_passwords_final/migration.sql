@@ -6,7 +6,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- Update existing plain text passwords to bcrypt hashes
 -- Only update passwords that don't start with $2a$, $2b$, $2x$, or $2y$ (bcrypt format)
-UPDATE "User"
+UPDATE "users"
 SET password = crypt(password, gen_salt('bf', 12))
 WHERE password IS NOT NULL
   AND password NOT LIKE '$2a$%'
@@ -15,4 +15,4 @@ WHERE password IS NOT NULL
   AND password NOT LIKE '$2y$%';
 
 -- Add a comment to track this migration
-COMMENT ON COLUMN "User".password IS 'Passwords are hashed using bcrypt with 12 salt rounds';
+COMMENT ON COLUMN "users".password IS 'Passwords are hashed using bcrypt with 12 salt rounds';
