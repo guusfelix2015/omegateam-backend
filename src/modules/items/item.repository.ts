@@ -41,7 +41,7 @@ export interface ItemsListResult {
 }
 
 export class ItemRepository {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: PrismaClient) { }
 
   async findAll(options: GetItemsOptions = {}): Promise<ItemsListResult> {
     const {
