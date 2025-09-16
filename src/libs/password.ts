@@ -1,13 +1,13 @@
-import bcrypt from 'bcrypt';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 /**
- * Password utility functions for hashing and comparing passwords
+ * Password utility functions for hashing and comparing passwords using PostgreSQL
  */
 export class PasswordUtils {
-  private static readonly SALT_ROUNDS = 12;
-
   /**
-   * Hash a plain text password
+   * Hash a plain text password using PostgreSQL's crypt function
    * @param password - Plain text password
    * @returns Promise<string> - Hashed password
    */
@@ -20,11 +20,14 @@ export class PasswordUtils {
       throw new Error('Password must be at least 6 characters long');
     }
 
-    return bcrypt.hash(password, this.SALT_ROUNDS);
+    const result = await prisma.$queryRaw<[{ hash: string }]>`
+      SELECT crypt(${password}, gen_salt('bf', 12)) as hash
+    `;
+    return result[0].hash;
   }
 
   /**
-   * Compare a plain text password with a hashed password
+   * Compare a plain text password with a hashed password using PostgreSQL
    * @param password - Plain text password
    * @param hashedPassword - Hashed password from database
    * @returns Promise<boolean> - True if passwords match
@@ -34,7 +37,10 @@ export class PasswordUtils {
       return false;
     }
 
-    return bcrypt.compare(password, hashedPassword);
+    const result = await prisma.$queryRaw<[{ match: boolean }]>`
+      SELECT (crypt(${password}, ${hashedPassword}) = ${hashedPassword}) as match
+    `;
+    return result[0].match;
   }
 
   /**
