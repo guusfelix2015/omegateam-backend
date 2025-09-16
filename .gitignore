@@ -153,3 +153,6 @@ Thumbs.db
 # Docker
 .dockerignore
 VPS_COMMANDS.md
+
+# Documentation (local only)
+docs/

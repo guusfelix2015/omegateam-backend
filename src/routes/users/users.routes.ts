@@ -129,6 +129,14 @@ const usersRoutes: FastifyPluginAsync = async fastify => {
     },
   });
 
+  // PUT /users/profile - Update current user's profile
+  fastify.put<{ Body: UpdateProfileInput }>('/profile', {
+    preValidation: [fastify.authenticate],
+    handler: async (request, reply) => {
+      return usersController.updateProfile(request, reply);
+    },
+  });
+
   // PUT /users/:id/profile - Update user profile (self or admin)
   fastify.put<{ Params: UserParams; Body: UpdateProfileInput }>(
     '/:id/profile',
