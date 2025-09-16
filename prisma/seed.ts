@@ -54,46 +54,72 @@ async function main() {
     )
   );
 
-  // Create seed users - simplified to 3 users only
-  const usersData = [
-    {
-      email: 'admin@lineage.com',
-      name: 'Admin User',
-      nickname: 'Admin',
-      password: 'admin123',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
-      isActive: true,
-      lvl: 85,
-      role: 'ADMIN' as const,
-      classeId: classes.find(c => c.name === 'Sorcerer')?.id, // Admin is a Sorcerer
-    },
-    {
-      email: 'player@lineage.com',
-      name: 'Regular Player',
-      nickname: 'Player',
-      password: 'player123',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=player',
-      isActive: true,
-      lvl: 45,
-      role: 'PLAYER' as const,
-      classeId: classes.find(c => c.name === 'Gladiador')?.id, // Player is a Gladiador
-    },
-    {
-      email: 'leader@lineage.com',
-      name: 'CP Leader',
-      nickname: 'CPLeader',
-      password: 'leader123',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=leader',
-      isActive: true,
-      lvl: 75,
-      role: 'CP_LEADER' as const,
-      classeId: classes.find(c => c.name === 'BladeDancer')?.id, // CP Leader is a BladeDancer
-    },
-  ];
+  // Create seed users with hashed passwords using PostgreSQL's crypt function
+  await Promise.all([
+    prisma.$executeRaw`
+      INSERT INTO users (id, email, name, nickname, password, avatar, "isActive", lvl, role, "classeId", "createdAt", "updatedAt")
+      VALUES (
+        gen_random_uuid(),
+        'admin@lineage.com',
+        'Admin User',
+        'Admin',
+        crypt('admin123456', gen_salt('bf', 12)),
+        'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
+        true,
+        85,
+        'ADMIN',
+        ${classes.find(c => c.name === 'Sorcerer')?.id},
+        NOW(),
+        NOW()
+      )
+      ON CONFLICT (email) DO NOTHING
+    `,
+    prisma.$executeRaw`
+      INSERT INTO users (id, email, name, nickname, password, avatar, "isActive", lvl, role, "classeId", "createdAt", "updatedAt")
+      VALUES (
+        gen_random_uuid(),
+        'player@lineage.com',
+        'Regular Player',
+        'Player',
+        crypt('player123456', gen_salt('bf', 12)),
+        'https://api.dicebear.com/7.x/avataaars/svg?seed=player',
+        true,
+        45,
+        'PLAYER',
+        ${classes.find(c => c.name === 'Gladiador')?.id},
+        NOW(),
+        NOW()
+      )
+      ON CONFLICT (email) DO NOTHING
+    `,
+    prisma.$executeRaw`
+      INSERT INTO users (id, email, name, nickname, password, avatar, "isActive", lvl, role, "classeId", "createdAt", "updatedAt")
+      VALUES (
+        gen_random_uuid(),
+        'leader@lineage.com',
+        'CP Leader',
+        'CPLeader',
+        crypt('leader123456', gen_salt('bf', 12)),
+        'https://api.dicebear.com/7.x/avataaars/svg?seed=leader',
+        true,
+        75,
+        'CP_LEADER',
+        ${classes.find(c => c.name === 'BladeDancer')?.id},
+        NOW(),
+        NOW()
+      )
+      ON CONFLICT (email) DO NOTHING
+    `,
+  ]);
 
-  const users = await Promise.all(
-    usersData.map(userData => prisma.user.create({ data: userData }))
-  );
+  // Get the created users for further operations
+  const users = await prisma.user.findMany({
+    where: {
+      email: {
+        in: ['admin@lineage.com', 'player@lineage.com', 'leader@lineage.com']
+      }
+    }
+  });
 
   // Create sample Company Parties
   const companyParties = await Promise.all([
