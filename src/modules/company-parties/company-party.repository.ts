@@ -13,6 +13,9 @@ export interface CompanyPartyWithUsers extends CompanyParty {
       avatar: string | null;
       lvl: number;
       role: string;
+      createdAt: Date;
+      updatedAt: Date;
+      isActive: boolean;
     };
   }>;
 }
@@ -124,6 +127,9 @@ export class CompanyPartyRepository {
                 avatar: true,
                 lvl: true,
                 role: true,
+                createdAt: true,
+                updatedAt: true,
+                isActive: true,
               },
             },
           },

@@ -141,6 +141,9 @@ export class CompanyPartyService {
         avatar: userCP.user.avatar,
         lvl: userCP.user.lvl,
         role: userCP.user.role,
+        createdAt: userCP.user.createdAt.toISOString(),
+        updatedAt: userCP.user.updatedAt.toISOString(),
+        isActive: userCP.user.isActive,
       })),
     };
   }
