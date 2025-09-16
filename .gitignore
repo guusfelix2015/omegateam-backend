@@ -152,3 +152,4 @@ Thumbs.db
 
 # Docker
 .dockerignore
+VPS_COMMANDS.md
