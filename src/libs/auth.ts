@@ -124,10 +124,8 @@ export async function login(
     throw new UnauthorizedError('Invalid credentials');
   }
 
-  // Check if password is hashed or plain text (for backward compatibility with seed data)
-  const isPasswordValid = PasswordUtils.isHashed(user.password)
-    ? await PasswordUtils.compare(password, user.password)
-    : user.password === password;
+  // All passwords are now hashed using PostgreSQL's crypt function
+  const isPasswordValid = await PasswordUtils.compare(password, user.password);
 
   if (!isPasswordValid) {
     throw new UnauthorizedError('Invalid credentials');
