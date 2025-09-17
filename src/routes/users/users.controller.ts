@@ -5,6 +5,7 @@ import type {
   UpdateProfileInput,
   GetUsersQuery,
   UserParams,
+  UpdateUserGearInput,
 } from './users.schema.ts';
 import { UserService } from '@/modules/users/user.service.ts';
 
@@ -101,5 +102,43 @@ export class UsersController {
     const stats = await this.userService.getUserStats();
 
     return reply.status(200).send(stats);
+  }
+
+  async getUserGear(
+    request: FastifyRequest,
+    reply: FastifyReply
+  ) {
+    if (!request.user) {
+      return reply.status(401).send({
+        error: {
+          message: 'Authentication required',
+          statusCode: 401,
+        },
+      });
+    }
+
+    const userId = request.user.id;
+    const gear = await this.userService.getUserGear(userId);
+
+    return reply.status(200).send(gear);
+  }
+
+  async updateUserGear(
+    request: FastifyRequest<{ Body: UpdateUserGearInput }>,
+    reply: FastifyReply
+  ) {
+    if (!request.user) {
+      return reply.status(401).send({
+        error: {
+          message: 'Authentication required',
+          statusCode: 401,
+        },
+      });
+    }
+
+    const userId = request.user.id;
+    const gear = await this.userService.updateUserGear(userId, request.body);
+
+    return reply.status(200).send(gear);
   }
 }

@@ -173,6 +173,7 @@ const indexRoutes: FastifyPluginAsync = async fastify => {
             isActive: { type: 'boolean' },
             lvl: { type: 'number' },
             classeId: { type: 'string', nullable: true },
+            bagUrl: { type: 'string', nullable: true },
             classe: {
               type: 'object',
               nullable: true,
@@ -222,6 +223,7 @@ const indexRoutes: FastifyPluginAsync = async fastify => {
           isActive: true,
           lvl: true,
           classeId: true,
+          bagUrl: true,
           createdAt: true,
           updatedAt: true,
           classe: {
@@ -249,9 +251,9 @@ const indexRoutes: FastifyPluginAsync = async fastify => {
         updatedAt: user.updatedAt.toISOString(),
         classe: user.classe
           ? {
-              ...user.classe,
-              createdAt: user.classe.createdAt.toISOString(),
-            }
+            ...user.classe,
+            createdAt: user.classe.createdAt.toISOString(),
+          }
           : null,
       });
     },

@@ -192,4 +192,37 @@ export class ItemRepository {
   async count(): Promise<number> {
     return this.prisma.item.count();
   }
+
+  async findByIds(ids: string[]): Promise<ItemEntity[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    return this.prisma.item.findMany({
+      where: {
+        id: {
+          in: ids,
+        },
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
+  }
+
+  async validateItemIds(ids: string[]): Promise<boolean> {
+    if (ids.length === 0) {
+      return true;
+    }
+
+    const count = await this.prisma.item.count({
+      where: {
+        id: {
+          in: ids,
+        },
+      },
+    });
+
+    return count === ids.length;
+  }
 }

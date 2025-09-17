@@ -6,19 +6,24 @@ import type {
   GetUsersQuery,
   UserResponse,
   UsersListResponse,
+  UpdateUserGearInput,
+  UserGearResponse,
 } from '@/routes/users/users.schema.ts';
 import { UserRepository } from './user.repository.ts';
 import { CompanyPartyRepository } from '@/modules/company-parties/company-party.repository.ts';
-import { NotFoundError } from '@/libs/errors.ts';
+import { ItemRepository } from '@/modules/items/item.repository.ts';
+import { NotFoundError, ValidationError } from '@/libs/errors.ts';
 import { PasswordUtils } from '@/libs/password.ts';
 
 export class UserService {
   private userRepository: UserRepository;
   private companyPartyRepository: CompanyPartyRepository;
+  private itemRepository: ItemRepository;
 
   constructor(prisma: PrismaClient) {
     this.userRepository = new UserRepository(prisma);
     this.companyPartyRepository = new CompanyPartyRepository(prisma);
+    this.itemRepository = new ItemRepository(prisma);
   }
 
   async getUsers(query: GetUsersQuery): Promise<UsersListResponse> {
@@ -179,6 +184,8 @@ export class UserService {
       lvl: user.lvl,
       role: user.role as 'ADMIN' | 'PLAYER',
       classeId: user.classeId,
+      ownedItemIds: user.ownedItemIds,
+      gearScore: user.gearScore,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
       classe: user.classe
@@ -218,5 +225,54 @@ export class UserService {
   }> {
     const stats = await this.userRepository.getStats();
     return stats;
+  }
+
+  async getUserGear(id: string): Promise<UserGearResponse> {
+    const user = await this.userRepository.getUserGear(id);
+    if (!user) {
+      throw new NotFoundError('User');
+    }
+
+    // Get the actual item details
+    const ownedItems = await this.itemRepository.findByIds(user.ownedItemIds);
+
+    return {
+      ownedItemIds: user.ownedItemIds,
+      gearScore: user.gearScore,
+      ownedItems: ownedItems.map(item => ({
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        grade: item.grade,
+        valorGsInt: item.valorGsInt,
+        valorDkp: item.valorDkp,
+        createdAt: item.createdAt.toISOString(),
+        updatedAt: item.updatedAt.toISOString(),
+      })),
+    };
+  }
+
+  async updateUserGear(id: string, data: UpdateUserGearInput): Promise<UserGearResponse> {
+    // Check if user exists
+    const userExists = await this.userRepository.exists(id);
+    if (!userExists) {
+      throw new NotFoundError('User');
+    }
+
+    // Validate that all item IDs exist
+    const itemsExist = await this.itemRepository.validateItemIds(data.ownedItemIds);
+    if (!itemsExist) {
+      throw new ValidationError('One or more item IDs are invalid');
+    }
+
+    // Calculate gear score
+    const items = await this.itemRepository.findByIds(data.ownedItemIds);
+    const gearScore = items.reduce((total, item) => total + item.valorGsInt, 0);
+
+    // Update user gear
+    await this.userRepository.updateUserGear(id, data.ownedItemIds, gearScore);
+
+    // Return updated gear info
+    return this.getUserGear(id);
   }
 }

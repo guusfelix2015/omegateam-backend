@@ -63,6 +63,9 @@ export class UserRepository {
           lvl: true,
           role: true,
           classeId: true,
+          ownedItemIds: true,
+          gearScore: true,
+          bagUrl: true,
           createdAt: true,
           updatedAt: true,
           classe: {
@@ -99,6 +102,9 @@ export class UserRepository {
         lvl: true,
         role: true,
         classeId: true,
+        ownedItemIds: true,
+        gearScore: true,
+        bagUrl: true,
         createdAt: true,
         updatedAt: true,
         classe: {
@@ -127,6 +133,9 @@ export class UserRepository {
         lvl: true,
         role: true,
         classeId: true,
+        ownedItemIds: true,
+        gearScore: true,
+        bagUrl: true,
         createdAt: true,
         updatedAt: true,
         classe: {
@@ -155,6 +164,9 @@ export class UserRepository {
         lvl: true,
         role: true,
         classeId: true,
+        ownedItemIds: true,
+        gearScore: true,
+        bagUrl: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -177,6 +189,9 @@ export class UserRepository {
           lvl: true,
           role: true,
           classeId: true,
+          ownedItemIds: true,
+          gearScore: true,
+          bagUrl: true,
           createdAt: true,
           updatedAt: true,
         },
@@ -215,6 +230,9 @@ export class UserRepository {
           lvl: true,
           role: true,
           classeId: true,
+          ownedItemIds: true,
+          gearScore: true,
+          bagUrl: true,
           createdAt: true,
           updatedAt: true,
           classe: {
@@ -290,5 +308,61 @@ export class UserRepository {
       admins,
       players: total - admins,
     };
+  }
+
+  async updateUserGear(id: string, ownedItemIds: string[], gearScore: number): Promise<UserWithClasse> {
+    try {
+      const user = await this.prisma.user.update({
+        where: { id },
+        data: {
+          ownedItemIds,
+          gearScore,
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          nickname: true,
+          avatar: true,
+          isActive: true,
+          lvl: true,
+          role: true,
+          classeId: true,
+          ownedItemIds: true,
+          gearScore: true,
+          bagUrl: true,
+          createdAt: true,
+          updatedAt: true,
+          classe: {
+            select: {
+              id: true,
+              name: true,
+              createdAt: true,
+            },
+          },
+        },
+      });
+
+      return user;
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          throw new NotFoundError('User');
+        }
+      }
+      throw error;
+    }
+  }
+
+  async getUserGear(id: string): Promise<{ ownedItemIds: string[]; gearScore: number } | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        ownedItemIds: true,
+        gearScore: true,
+      },
+    });
+
+    return user;
   }
 }

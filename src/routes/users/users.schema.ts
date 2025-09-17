@@ -34,6 +34,9 @@ export const userSchema = z.object({
   lvl: z.number().int().min(1).max(85),
   role: userRoleSchema,
   classeId: z.string().cuid().nullable(),
+  ownedItemIds: z.array(z.string().cuid()).default([]),
+  gearScore: z.number().int().min(0).default(0),
+  bagUrl: z.string().url().nullable().optional(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
   classe: classeSchema.nullable().optional(),
@@ -111,6 +114,7 @@ export const updateProfileSchema = z.object({
   avatar: z.string().url('Invalid avatar URL').nullable().optional(),
   lvl: z.number().int().min(1).max(85).optional(),
   classeId: z.string().cuid().nullable().optional(),
+  bagUrl: z.string().url('Invalid bag URL').nullable().optional(),
 });
 
 // Query parameters schema
@@ -169,6 +173,26 @@ export const errorResponseSchema = z.object({
   }),
 });
 
+// Gear Score schemas
+export const updateUserGearSchema = z.object({
+  ownedItemIds: z.array(z.string().cuid()).min(0, 'Invalid item IDs'),
+});
+
+export const userGearResponseSchema = z.object({
+  ownedItemIds: z.array(z.string().cuid()),
+  gearScore: z.number().int().min(0),
+  ownedItems: z.array(z.object({
+    id: z.string().cuid(),
+    name: z.string(),
+    category: z.enum(['HELMET', 'ARMOR', 'PANTS', 'BOOTS', 'GLOVES', 'NECKLACE', 'EARRING', 'RING', 'SHIELD', 'WEAPON']),
+    grade: z.enum(['D', 'C', 'B', 'A', 'S']),
+    valorGsInt: z.number().int(),
+    valorDkp: z.number().int(),
+    createdAt: z.string().datetime(),
+    updatedAt: z.string().datetime(),
+  })),
+});
+
 // Type exports
 export type UserRole = z.infer<typeof userRoleSchema>;
 export type User = z.infer<typeof userSchema>;
@@ -179,3 +203,5 @@ export type GetUsersQuery = z.infer<typeof getUsersQuerySchema>;
 export type UserParams = z.infer<typeof userParamsSchema>;
 export type UserResponse = z.infer<typeof userResponseSchema>;
 export type UsersListResponse = z.infer<typeof usersListResponseSchema>;
+export type UpdateUserGearInput = z.infer<typeof updateUserGearSchema>;
+export type UserGearResponse = z.infer<typeof userGearResponseSchema>;

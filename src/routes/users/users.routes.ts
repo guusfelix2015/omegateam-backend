@@ -7,6 +7,7 @@ import type {
   UpdateProfileInput,
   GetUsersQuery,
   UserParams,
+  UpdateUserGearInput,
 } from './users.schema.ts';
 
 const usersRoutes: FastifyPluginAsync = async fastify => {
@@ -147,6 +148,22 @@ const usersRoutes: FastifyPluginAsync = async fastify => {
       },
     }
   );
+
+  // GET /users/profile/gear - Get current user's gear
+  fastify.get('/profile/gear', {
+    preValidation: [fastify.authenticate],
+    handler: async (request, reply) => {
+      return usersController.getUserGear(request, reply);
+    },
+  });
+
+  // PUT /users/profile/gear - Update current user's gear
+  fastify.put<{ Body: UpdateUserGearInput }>('/profile/gear', {
+    preValidation: [fastify.authenticate],
+    handler: async (request, reply) => {
+      return usersController.updateUserGear(request, reply);
+    },
+  });
 };
 
 export default usersRoutes;
