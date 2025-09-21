@@ -108,15 +108,17 @@ export class DkpService {
   async getDkpLeaderboard(
     query: Partial<DkpLeaderboardQuery> = {}
   ): Promise<DkpLeaderboardResponse> {
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+
     const options: Partial<GetDkpLeaderboardOptions> = {
-      page: query.page ?? 1,
-      limit: query.limit ?? 10,
+      page,
+      limit,
       sortOrder: query.sortOrder ?? 'desc',
       search: query.search?.trim(),
     };
 
     const { data, total } = await this.dkpRepository.getDkpLeaderboard(options);
-    const { page = 1, limit = 10 } = query;
 
     const totalPages = Math.ceil(total / limit);
     const hasNext = page < totalPages;
@@ -155,8 +157,8 @@ export class DkpService {
     }
 
     const options: Partial<GetDkpHistoryOptions> = {
-      page: query.page ?? 1,
-      limit: query.limit ?? 10,
+      page: Number(query.page) || 1,
+      limit: Number(query.limit) || 10,
       type: query.type,
       dateFrom: query.dateFrom ? new Date(query.dateFrom) : undefined,
       dateTo: query.dateTo ? new Date(query.dateTo) : undefined,
@@ -168,7 +170,8 @@ export class DkpService {
       userId,
       options
     );
-    const { page = 1, limit = 10 } = query;
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
 
     const totalPages = Math.ceil(total / limit);
     const hasNext = page < totalPages;

@@ -23,6 +23,11 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "docker:dev": "docker compose --profile dev up -d",
+    "diagnose:cp-leader": "tsx scripts/diagnose-cp-leader-dkp.ts",
+    "fix:cp-leader": "tsx scripts/assign-items-to-cp-leader.ts",
+    "test:member-detail": "tsx scripts/test-member-detail-endpoints.ts",
+    "test:cp-leader-dkp": "tsx scripts/test-cp-leader-dkp-with-gear.ts",
+    "test:dkp-navigation": "tsx scripts/test-dkp-admin-navigation.ts",
     "docker:prod": "docker compose --profile prod up -d",
     "docker:down": "docker compose down"
   },

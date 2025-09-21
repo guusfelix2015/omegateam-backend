@@ -112,7 +112,6 @@ export class RaidInstanceService {
       const participantPromises = participants.map(async (user) => {
         const dkpAwarded = this.dkpCalculationService.calculateDkpForParticipant(
           raid.bossLevel,
-          raid.baseScore,
           user.gearScore
         );
 
@@ -266,7 +265,6 @@ export class RaidInstanceService {
 
     return this.dkpCalculationService.previewDkpCalculation(
       raid.bossLevel,
-      raid.baseScore,
       participants
     );
   }

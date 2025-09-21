@@ -141,4 +141,13 @@ export class UsersController {
 
     return reply.status(200).send(gear);
   }
+
+  async getUserGearById(
+    request: FastifyRequest<{ Params: UserParams }>,
+    reply: FastifyReply
+  ) {
+    const gear = await this.userService.getUserGear(request.params.id);
+
+    return reply.status(200).send(gear);
+  }
 }

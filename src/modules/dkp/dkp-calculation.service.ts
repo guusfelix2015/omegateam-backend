@@ -1,52 +1,47 @@
 /**
  * DKP Calculation Service
- * 
+ *
  * Handles the core DKP calculation logic based on the formula:
- * DKP = (Boss Level × Base Score) × (Gear Score ÷ 100)
+ * DKP = (Boss Level × Gear Score) ÷ 100
  */
 export class DkpCalculationService {
   /**
    * Calculate DKP points for a participant based on raid and gear score
-   * 
+   *
    * @param bossLevel - The level of the raid boss
-   * @param baseScore - The base score multiplier for the raid
    * @param gearScore - The participant's gear score at time of raid
-   * @returns Calculated DKP points (rounded down to integer)
+   * @returns Calculated DKP points (rounded to integer)
    */
   calculateDkpForParticipant(
     bossLevel: number,
-    baseScore: number,
     gearScore: number
   ): number {
-    if (bossLevel <= 0 || baseScore <= 0 || gearScore < 0) {
+    if (bossLevel <= 0 || gearScore < 0) {
       throw new Error('Invalid parameters for DKP calculation');
     }
 
-    // Formula: DKP = (Boss Level × Base Score) × (Gear Score ÷ 100)
-    const dkpPoints = (bossLevel * baseScore) * (gearScore / 100);
-    
-    // Round down to ensure we always get an integer
-    return Math.floor(dkpPoints);
+    // Formula: DKP = (Boss Level × Gear Score) ÷ 100
+    const dkpPoints = (bossLevel * gearScore) / 100;
+
+    // Round to nearest integer
+    return Math.round(dkpPoints);
   }
 
   /**
    * Calculate DKP for multiple participants
-   * 
+   *
    * @param bossLevel - The level of the raid boss
-   * @param baseScore - The base score multiplier for the raid
    * @param participants - Array of participants with their gear scores
    * @returns Array of participants with calculated DKP
    */
   calculateDkpForMultipleParticipants(
     bossLevel: number,
-    baseScore: number,
     participants: Array<{ userId: string; gearScore: number }>
   ): Array<{ userId: string; gearScore: number; dkpAwarded: number }> {
     return participants.map(participant => ({
       ...participant,
       dkpAwarded: this.calculateDkpForParticipant(
         bossLevel,
-        baseScore,
         participant.gearScore
       ),
     }));
@@ -54,7 +49,7 @@ export class DkpCalculationService {
 
   /**
    * Validate DKP calculation parameters
-   * 
+   *
    * @param bossLevel - The level of the raid boss
    * @param baseScore - The base score multiplier for the raid
    * @param gearScore - The participant's gear score
@@ -95,15 +90,13 @@ export class DkpCalculationService {
 
   /**
    * Get DKP calculation preview without actually awarding points
-   * 
+   *
    * @param bossLevel - The level of the raid boss
-   * @param baseScore - The base score multiplier for the raid
    * @param participants - Array of participants with their gear scores
    * @returns Preview of DKP calculations
    */
   previewDkpCalculation(
     bossLevel: number,
-    baseScore: number,
     participants: Array<{ userId: string; name: string; gearScore: number }>
   ): {
     totalDkpToAward: number;
@@ -119,7 +112,6 @@ export class DkpCalculationService {
       ...participant,
       dkpAwarded: this.calculateDkpForParticipant(
         bossLevel,
-        baseScore,
         participant.gearScore
       ),
     }));
@@ -129,7 +121,7 @@ export class DkpCalculationService {
       0
     );
 
-    const averageDkpPerParticipant = participants.length > 0 
+    const averageDkpPerParticipant = participants.length > 0
       ? Math.floor(totalDkpToAward / participants.length)
       : 0;
 
