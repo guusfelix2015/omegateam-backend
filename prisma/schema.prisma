@@ -50,13 +50,16 @@ model User {
   classeId     String?  // Optional - user can set later
   ownedItemIds String[] @default([]) @map("owned_item_ids") // Array of item IDs that user owns
   gearScore    Int      @default(0) @map("gear_score") // Total gear score from owned items
+  dkpPoints    Int      @default(0) @map("dkp_points") // DKP points balance
   bagUrl       String?  @map("bag_url") // Optional URL for inventory image
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   // Relations
-  classe         Classe?            @relation(fields: [classeId], references: [id])
-  companyParties UserCompanyParty[]
+  classe              Classe?            @relation(fields: [classeId], references: [id])
+  companyParties      UserCompanyParty[]
+  dkpTransactions     DkpTransaction[]
+  raidParticipations  RaidParticipant[]
 
   @@map("users")
 }
@@ -110,4 +113,74 @@ model Item {
   updatedAt   DateTime     @updatedAt @map("updated_at")
 
   @@map("items")
+}
+
+enum DkpTransactionType {
+  RAID_REWARD
+  MANUAL_ADJUSTMENT
+  ITEM_PURCHASE
+}
+
+model Raid {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  bossLevel   Int      @map("boss_level")
+  baseScore   Int      @map("base_score") // Used in DKP calculation formula
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  instances   RaidInstance[]
+
+  @@map("raids")
+}
+
+model RaidInstance {
+  id            String   @id @default(cuid())
+  raidId        String   @map("raid_id")
+  completedAt   DateTime @default(now()) @map("completed_at")
+  createdBy     String   @map("created_by") // Admin who registered the raid
+  notes         String?  // Optional notes about the raid
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  // Relations
+  raid            Raid @relation(fields: [raidId], references: [id], onDelete: Cascade)
+  participants    RaidParticipant[]
+  dkpTransactions DkpTransaction[]
+
+  @@map("raid_instances")
+}
+
+model RaidParticipant {
+  id              String   @id @default(cuid())
+  raidInstanceId  String   @map("raid_instance_id")
+  userId          String   @map("user_id")
+  gearScoreAtTime Int      @map("gear_score_at_time") // GS when raid was completed
+  dkpAwarded      Int      @map("dkp_awarded") // Calculated DKP for this participant
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Relations
+  raidInstance    RaidInstance @relation(fields: [raidInstanceId], references: [id], onDelete: Cascade)
+  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([raidInstanceId, userId]) // Prevent duplicate participation
+  @@map("raid_participants")
+}
+
+model DkpTransaction {
+  id              String             @id @default(cuid())
+  userId          String             @map("user_id")
+  type            DkpTransactionType
+  amount          Int                // Positive for credits, negative for debits
+  reason          String             // Required description
+  createdBy       String             @map("created_by") // Admin who created the transaction
+  raidInstanceId  String?            @map("raid_instance_id") // For raid rewards
+  createdAt       DateTime           @default(now()) @map("created_at")
+
+  // Relations
+  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  raidInstance    RaidInstance? @relation(fields: [raidInstanceId], references: [id], onDelete: SetNull)
+
+  @@map("dkp_transactions")
 }

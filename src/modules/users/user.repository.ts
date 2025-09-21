@@ -354,6 +354,26 @@ export class UserRepository {
     }
   }
 
+  async updateUserDkpBalance(id: string, amount: number): Promise<void> {
+    try {
+      await this.prisma.user.update({
+        where: { id },
+        data: {
+          dkpPoints: {
+            increment: amount,
+          },
+        },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          throw new NotFoundError('User');
+        }
+      }
+      throw error;
+    }
+  }
+
   async getUserGear(id: string): Promise<{ ownedItemIds: string[]; gearScore: number } | null> {
     const user = await this.prisma.user.findUnique({
       where: { id },

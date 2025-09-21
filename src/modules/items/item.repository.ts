@@ -1,13 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
+
 import type { PrismaClient, ItemCategory, ItemGrade } from '@prisma/client';
 import { Prisma } from '@prisma/client';
 import { ConflictError } from '@/libs/errors.ts';
 
-// Define the item type explicitly to avoid any issues
 interface ItemEntity {
   id: string;
   name: string;

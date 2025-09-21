@@ -36,6 +36,7 @@ export const userSchema = z.object({
   classeId: z.string().cuid().nullable(),
   ownedItemIds: z.array(z.string().cuid()).default([]),
   gearScore: z.number().int().min(0).default(0),
+  dkpPoints: z.number().int().min(0).default(0),
   bagUrl: z.string().url().nullable().optional(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),

@@ -15,6 +15,9 @@ import companyPartiesRoutes from '@/routes/company-parties/company-parties.route
 import classesRoutes from '@/routes/classes/classes.routes.ts';
 import itemsRoutes from '@/routes/items/items.routes.ts';
 import lookupsRoutes from '@/routes/lookups/lookups.routes.ts';
+import raidsRoutes from '@/routes/raids/raids.routes.ts';
+import raidInstancesRoutes from '@/routes/raid-instances/raid-instances.routes.ts';
+import dkpRoutes from '@/routes/dkp/dkp.routes.ts';
 
 export async function createApp(): Promise<FastifyInstance> {
   const app = Fastify({
@@ -54,6 +57,9 @@ export async function createApp(): Promise<FastifyInstance> {
   await app.register(classesRoutes, { prefix: '/classes' });
   await app.register(itemsRoutes, { prefix: '/items' });
   await app.register(lookupsRoutes, { prefix: '/lookups' });
+  await app.register(raidsRoutes, { prefix: '/raids' });
+  await app.register(raidInstancesRoutes, { prefix: '/raid-instances' });
+  await app.register(dkpRoutes, { prefix: '/dkp' });
 
   // 404 handler
   app.setNotFoundHandler(async (request, reply) => {
