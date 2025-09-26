@@ -10,6 +10,7 @@ import type {
   UserParams,
   UpdateUserGearInput,
 } from './users.schema.ts';
+import { getUsersQuerySchema } from './users.schema.ts';
 
 const usersRoutes: FastifyPluginAsync = async fastify => {
   // Initialize dependencies
@@ -20,6 +21,9 @@ const usersRoutes: FastifyPluginAsync = async fastify => {
   fastify.get<{ Querystring: GetUsersQuery }>('/', {
     preValidation: [fastify.authenticate],
     handler: async (request, reply) => {
+      // Manually validate and transform query parameters
+      const validatedQuery = getUsersQuerySchema.parse(request.query);
+      request.query = validatedQuery;
       return usersController.getUsers(request, reply);
     },
   });

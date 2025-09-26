@@ -86,6 +86,7 @@ export class ItemsController {
       'RING',
       'SHIELD',
       'WEAPON',
+      'COMUM',
     ];
     return reply.status(200).send({ data: categories });
   }
@@ -107,9 +108,10 @@ export class ItemsController {
       'RING',
       'SHIELD',
       'WEAPON',
+      'COMUM',
     ];
     const grades = ['D', 'C', 'B', 'A', 'S'];
-    
+
     return reply.status(200).send({
       categories,
       grades,

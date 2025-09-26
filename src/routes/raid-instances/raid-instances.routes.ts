@@ -5,11 +5,18 @@ import { RaidInstanceRepository } from '@/modules/raid-instances/raid-instance.r
 import { RaidRepository } from '@/modules/raids/raid.repository.ts';
 import { UserRepository } from '@/modules/users/user.repository.ts';
 import { DkpRepository } from '@/modules/dkp/dkp.repository.ts';
+import { RaidDroppedItemsController } from '@/routes/raid-dropped-items/raid-dropped-items.controller.ts';
+import { RaidDroppedItemService } from '@/modules/raid-dropped-items/raid-dropped-item.service.ts';
+import { RaidDroppedItemRepository } from '@/modules/raid-dropped-items/raid-dropped-item.repository.ts';
 import {
   type CreateRaidInstanceInput,
   type GetRaidInstancesQuery,
   type RaidInstanceParams,
 } from '@/routes/raids/raids.schema.ts';
+import {
+  type CreateRaidDroppedItemInput,
+  type RaidInstanceParams as DroppedItemRaidInstanceParams,
+} from '@/routes/raid-dropped-items/raid-dropped-items.schema.ts';
 
 const raidInstancesRoutes: FastifyPluginAsync = async fastify => {
   // Initialize dependencies
@@ -17,7 +24,7 @@ const raidInstancesRoutes: FastifyPluginAsync = async fastify => {
   const raidRepository = new RaidRepository(fastify.prisma);
   const userRepository = new UserRepository(fastify.prisma);
   const dkpRepository = new DkpRepository(fastify.prisma);
-  
+
   const raidInstanceService = new RaidInstanceService(
     fastify.prisma,
     raidInstanceRepository,
@@ -25,8 +32,16 @@ const raidInstancesRoutes: FastifyPluginAsync = async fastify => {
     userRepository,
     dkpRepository
   );
-  
+
   const raidInstancesController = new RaidInstancesController(raidInstanceService);
+
+  // Initialize dropped items dependencies
+  const raidDroppedItemRepository = new RaidDroppedItemRepository(fastify.prisma);
+  const raidDroppedItemService = new RaidDroppedItemService(
+    raidDroppedItemRepository,
+    raidInstanceRepository
+  );
+  const raidDroppedItemsController = new RaidDroppedItemsController(raidDroppedItemService);
 
   // GET /raid-instances - List raid instances with pagination and filters
   fastify.get<{ Querystring: GetRaidInstancesQuery }>('/', {
@@ -86,6 +101,46 @@ const raidInstancesRoutes: FastifyPluginAsync = async fastify => {
     preValidation: [fastify.authenticate, fastify.requireAdmin],
     handler: async (request, reply) => {
       return raidInstancesController.deleteRaidInstance(request, reply);
+    },
+  });
+
+  // GET /raid-instances/:raidInstanceId/dropped-items - List dropped items for specific raid instance
+  fastify.get<{ Params: DroppedItemRaidInstanceParams }>('/:raidInstanceId/dropped-items', {
+    preValidation: [fastify.authenticate],
+    handler: async (request, reply) => {
+      return raidDroppedItemsController.getRaidDroppedItemsByRaidInstanceId(request, reply);
+    },
+  });
+
+  // POST /raid-instances/:id/participants - Add participant to raid instance (ADMIN only)
+  fastify.post<{
+    Body: { userId: string };
+    Params: RaidInstanceParams;
+  }>('/:id/participants', {
+    preValidation: [fastify.authenticate, fastify.requireAdmin],
+    handler: async (request, reply) => {
+      return raidInstancesController.addParticipant(request, reply);
+    },
+  });
+
+  // DELETE /raid-instances/:id/participants/:userId - Remove participant from raid instance (ADMIN only)
+  fastify.delete<{
+    Params: RaidInstanceParams & { userId: string };
+  }>('/:id/participants/:userId', {
+    preValidation: [fastify.authenticate, fastify.requireAdmin],
+    handler: async (request, reply) => {
+      return raidInstancesController.removeParticipant(request, reply);
+    },
+  });
+
+  // POST /raid-instances/:raidInstanceId/dropped-items - Add dropped item to raid instance (ADMIN only)
+  fastify.post<{
+    Body: CreateRaidDroppedItemInput;
+    Params: DroppedItemRaidInstanceParams;
+  }>('/:raidInstanceId/dropped-items', {
+    preValidation: [fastify.authenticate, fastify.requireAdmin],
+    handler: async (request, reply) => {
+      return raidDroppedItemsController.createRaidDroppedItem(request, reply);
     },
   });
 };

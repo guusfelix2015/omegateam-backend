@@ -229,6 +229,123 @@ export class RaidInstanceService {
     return raidInstances.map(raidInstance => this.toRaidInstanceResponse(raidInstance));
   }
 
+  async addParticipant(
+    raidInstanceId: string,
+    userId: string,
+    adminId: string
+  ): Promise<RaidParticipantSchema> {
+    // Validate that raid instance exists
+    const raidInstance = await this.raidInstanceRepository.findById(raidInstanceId);
+    if (!raidInstance) {
+      throw new NotFoundError('Raid instance');
+    }
+
+    // Validate that user exists and is active
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundError('User');
+    }
+    if (!user.isActive) {
+      throw new ValidationError(`User ${user.nickname} is not active`);
+    }
+
+    // Check if user is already a participant
+    const isAlreadyParticipant = await this.raidInstanceRepository.checkUserParticipation(
+      raidInstanceId,
+      userId
+    );
+    if (isAlreadyParticipant) {
+      throw new ValidationError('User is already a participant in this raid instance');
+    }
+
+    // Get raid details for DKP calculation
+    const raid = await this.raidRepository.findById(raidInstance.raidId);
+    if (!raid) {
+      throw new NotFoundError('Raid');
+    }
+
+    // Calculate DKP for the participant
+    const dkpAwarded = this.dkpCalculationService.calculateDkpForParticipant(
+      raid.bossLevel,
+      user.gearScore
+    );
+
+    // Use transaction to ensure data consistency
+    return this.prisma.$transaction(async () => {
+      // Create participant record
+      const participantData: CreateRaidParticipantData = {
+        raidInstanceId,
+        userId,
+        gearScoreAtTime: user.gearScore,
+        dkpAwarded,
+      };
+
+      await this.raidInstanceRepository.createParticipant(participantData);
+
+      // Create DKP transaction
+      await this.dkpRepository.createTransaction({
+        userId,
+        type: 'RAID_REWARD',
+        amount: dkpAwarded,
+        reason: `Raid completion: ${raid.name}`,
+        createdBy: adminId,
+        raidInstanceId,
+      });
+
+      return {
+        id: '', // Will be set by the database
+        raidInstanceId,
+        userId,
+        gearScoreAtTime: user.gearScore,
+        dkpAwarded,
+        createdAt: new Date().toISOString(),
+        user: {
+          id: user.id,
+          name: user.name,
+          nickname: user.nickname,
+          avatar: user.avatar,
+        },
+      };
+    });
+  }
+
+  async removeParticipant(raidInstanceId: string, userId: string): Promise<void> {
+    // Validate that raid instance exists
+    const raidInstance = await this.raidInstanceRepository.findById(raidInstanceId);
+    if (!raidInstance) {
+      throw new NotFoundError('Raid instance');
+    }
+
+    // Check if user is a participant
+    const isParticipant = await this.raidInstanceRepository.checkUserParticipation(
+      raidInstanceId,
+      userId
+    );
+    if (!isParticipant) {
+      throw new ValidationError('User is not a participant in this raid instance');
+    }
+
+    // Use transaction to ensure data consistency
+    await this.prisma.$transaction(async () => {
+      // Remove participant record
+      await this.prisma.raidParticipant.deleteMany({
+        where: {
+          raidInstanceId,
+          userId,
+        },
+      });
+
+      // Remove associated DKP transaction
+      await this.prisma.dkpTransaction.deleteMany({
+        where: {
+          raidInstanceId,
+          userId,
+          type: 'RAID_REWARD',
+        },
+      });
+    });
+  }
+
   async previewDkpCalculation(
     raidId: string,
     participantIds: string[]

@@ -27,6 +27,7 @@ enum ItemCategory {
   RING
   SHIELD
   WEAPON
+  COMUM
 }
 
 enum ItemGrade {
@@ -148,8 +149,28 @@ model RaidInstance {
   raid            Raid @relation(fields: [raidId], references: [id], onDelete: Cascade)
   participants    RaidParticipant[]
   dkpTransactions DkpTransaction[]
+  droppedItems    RaidDroppedItem[]
 
   @@map("raid_instances")
+}
+
+model RaidDroppedItem {
+  id              String       @id @default(cuid())
+  name            String
+  category        ItemCategory
+  grade           ItemGrade
+  minDkpBid       Int          @map("min_dkp_bid") // Minimum DKP bid amount
+  raidInstanceId  String       @map("raid_instance_id")
+  droppedAt       DateTime     @default(now()) @map("dropped_at")
+  createdBy       String       @map("created_by") // Admin who added the item
+  notes           String?      // Optional notes about the drop
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  raidInstance    RaidInstance @relation(fields: [raidInstanceId], references: [id], onDelete: Cascade)
+
+  @@map("raid_dropped_items")
 }
 
 model RaidParticipant {

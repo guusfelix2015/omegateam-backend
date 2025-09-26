@@ -94,4 +94,45 @@ export class RaidInstancesController {
     );
     return reply.status(200).send(preview);
   }
+
+  async addParticipant(
+    request: FastifyRequest<{
+      Body: { userId: string };
+      Params: RaidInstanceParams;
+    }>,
+    reply: FastifyReply
+  ) {
+    if (!request.user) {
+      return reply.status(401).send({
+        error: {
+          message: 'Authentication required',
+          statusCode: 401,
+        },
+      });
+    }
+
+    const { id: raidInstanceId } = request.params;
+    const { userId } = request.body;
+
+    const participant = await this.raidInstanceService.addParticipant(
+      raidInstanceId,
+      userId,
+      request.user.id
+    );
+    return reply.status(201).send(participant);
+  }
+
+  async removeParticipant(
+    request: FastifyRequest<{
+      Params: RaidInstanceParams & { userId: string };
+    }>,
+    reply: FastifyReply
+  ) {
+    const { id: raidInstanceId, userId } = request.params;
+
+    await this.raidInstanceService.removeParticipant(raidInstanceId, userId);
+    return reply.status(200).send({
+      message: 'Participant removed successfully',
+    });
+  }
 }

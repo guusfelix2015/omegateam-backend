@@ -12,6 +12,7 @@ export const itemCategorySchema = z.enum([
   'RING',
   'SHIELD',
   'WEAPON',
+  'COMUM',
 ]);
 
 // Item grade enum
