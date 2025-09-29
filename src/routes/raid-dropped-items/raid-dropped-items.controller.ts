@@ -19,7 +19,14 @@ export class RaidDroppedItemsController {
     request: FastifyRequest<{ Querystring: GetRaidDroppedItemsQuery }>,
     reply: FastifyReply
   ): Promise<FastifyReply> {
-    const result = await this.raidDroppedItemService.getRaidDroppedItems(request.query);
+    // Convert query parameters to proper types
+    const query = {
+      ...request.query,
+      page: request.query.page ? Number(request.query.page) : undefined,
+      limit: request.query.limit ? Number(request.query.limit) : undefined,
+    };
+
+    const result = await this.raidDroppedItemService.getRaidDroppedItems(query);
     return reply.status(200).send(result);
   }
 
@@ -44,7 +51,7 @@ export class RaidDroppedItemsController {
   }
 
   async createRaidDroppedItem(
-    request: FastifyRequest<{ 
+    request: FastifyRequest<{
       Body: CreateRaidDroppedItemInput;
       Params: RaidInstanceParams;
     }>,
@@ -72,7 +79,7 @@ export class RaidDroppedItemsController {
   }
 
   async updateRaidDroppedItem(
-    request: FastifyRequest<{ 
+    request: FastifyRequest<{
       Body: UpdateRaidDroppedItemInput;
       Params: RaidDroppedItemParams;
     }>,

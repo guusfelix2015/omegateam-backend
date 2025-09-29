@@ -57,20 +57,20 @@ const dkpRoutes: FastifyPluginAsync = async fastify => {
     },
   });
 
-  // GET /dkp/users/:id/history - Get specific user's DKP history (ADMIN only)
+  // GET /dkp/users/:id/history - Get specific user's DKP history (authenticated users)
   fastify.get<{
     Params: UserParams;
     Querystring: DkpHistoryQuery;
   }>('/users/:id/history', {
-    preValidation: [fastify.authenticate, fastify.requireAdmin],
+    preValidation: [fastify.authenticate],
     handler: async (request, reply) => {
       return dkpController.getUserDkpHistory(request, reply);
     },
   });
 
-  // GET /dkp/users/:id/summary - Get specific user's DKP summary (ADMIN only)
+  // GET /dkp/users/:id/summary - Get specific user's DKP summary (authenticated users)
   fastify.get<{ Params: UserParams }>('/users/:id/summary', {
-    preValidation: [fastify.authenticate, fastify.requireAdmin],
+    preValidation: [fastify.authenticate],
     handler: async (request, reply) => {
       return dkpController.getUserDkpSummary(request, reply);
     },

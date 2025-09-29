@@ -126,9 +126,9 @@ const usersRoutes: FastifyPluginAsync = async fastify => {
     },
   });
 
-  // GET /users/:id/gear - Get specific user's gear (ADMIN only)
+  // GET /users/:id/gear - Get specific user's gear (authenticated users)
   fastify.get<{ Params: UserParams }>('/:id/gear', {
-    preValidation: [fastify.authenticate, fastify.requireAdmin],
+    preValidation: [fastify.authenticate],
     handler: async (request, reply): Promise<FastifyReply> => {
       return usersController.getUserGearById(request, reply);
     },

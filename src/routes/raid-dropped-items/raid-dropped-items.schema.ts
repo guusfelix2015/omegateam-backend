@@ -54,8 +54,8 @@ export const updateRaidDroppedItemSchema = z.object({
 
 // Query parameters schema for raid dropped items
 export const getRaidDroppedItemsQuerySchema = z.object({
-  page: z.coerce.number().min(1).default(1),
-  limit: z.coerce.number().min(1).max(100).default(10),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
   raidInstanceId: z.string().cuid().optional(),
   category: itemCategorySchema.optional(),
   grade: itemGradeSchema.optional(),
