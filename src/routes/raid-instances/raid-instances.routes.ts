@@ -10,6 +10,7 @@ import { RaidDroppedItemService } from '@/modules/raid-dropped-items/raid-droppe
 import { RaidDroppedItemRepository } from '@/modules/raid-dropped-items/raid-dropped-item.repository.ts';
 import {
   type CreateRaidInstanceInput,
+  type CreateRaidInstanceWithItemsInput,
   type GetRaidInstancesQuery,
   type RaidInstanceParams,
 } from '@/routes/raids/raids.schema.ts';
@@ -25,18 +26,21 @@ const raidInstancesRoutes: FastifyPluginAsync = async fastify => {
   const userRepository = new UserRepository(fastify.prisma);
   const dkpRepository = new DkpRepository(fastify.prisma);
 
+  // Initialize dropped items dependencies
+  const raidDroppedItemRepository = new RaidDroppedItemRepository(fastify.prisma);
+
   const raidInstanceService = new RaidInstanceService(
     fastify.prisma,
     raidInstanceRepository,
     raidRepository,
     userRepository,
-    dkpRepository
+    dkpRepository,
+    raidDroppedItemRepository
   );
 
   const raidInstancesController = new RaidInstancesController(raidInstanceService);
 
-  // Initialize dropped items dependencies
-  const raidDroppedItemRepository = new RaidDroppedItemRepository(fastify.prisma);
+  // Initialize dropped items service
   const raidDroppedItemService = new RaidDroppedItemService(
     raidDroppedItemRepository,
     raidInstanceRepository
@@ -93,6 +97,14 @@ const raidInstancesRoutes: FastifyPluginAsync = async fastify => {
     preValidation: [fastify.authenticate, fastify.requireAdmin],
     handler: async (request, reply) => {
       return raidInstancesController.createRaidInstance(request, reply);
+    },
+  });
+
+  // POST /raid-instances/with-items - Create new raid instance with dropped items (ADMIN only)
+  fastify.post<{ Body: CreateRaidInstanceWithItemsInput }>('/with-items', {
+    preValidation: [fastify.authenticate, fastify.requireAdmin],
+    handler: async (request, reply) => {
+      return raidInstancesController.createRaidInstanceWithItems(request, reply);
     },
   });
 

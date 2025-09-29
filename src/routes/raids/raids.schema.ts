@@ -3,7 +3,7 @@ import { z } from 'zod';
 // DKP Transaction Type enum
 export const dkpTransactionTypeSchema = z.enum([
   'RAID_REWARD',
-  'MANUAL_ADJUSTMENT', 
+  'MANUAL_ADJUSTMENT',
   'ITEM_PURCHASE',
 ]);
 
@@ -83,11 +83,28 @@ export const raidInstanceSchema = z.object({
   raid: raidResponseSchema.optional(),
 });
 
+// Dropped item for raid instance creation
+export const createRaidInstanceDroppedItemSchema = z.object({
+  name: z.string().min(1, 'Nome é obrigatório').max(100, 'Nome muito longo'),
+  category: z.enum(['WEAPON', 'ARMOR', 'ACCESSORY', 'CONSUMABLE', 'MISC']),
+  grade: z.enum(['NO_GRADE', 'D', 'C', 'B', 'A', 'S']),
+  minDkpBid: z.number().int().min(0, 'Lance mínimo deve ser não-negativo'),
+  notes: z.string().max(500, 'Notas muito longas').optional(),
+});
+
 // Create raid instance input schema
 export const createRaidInstanceSchema = z.object({
   raidId: z.string().cuid('Invalid raid ID'),
   participantIds: z.array(z.string().cuid()).min(1, 'At least one participant is required'),
   notes: z.string().max(500).optional(),
+});
+
+// Extended create raid instance input schema with dropped items
+export const createRaidInstanceWithItemsSchema = z.object({
+  raidId: z.string().cuid('Invalid raid ID'),
+  participantIds: z.array(z.string().cuid()).min(1, 'At least one participant is required'),
+  notes: z.string().max(500).optional(),
+  droppedItems: z.array(createRaidInstanceDroppedItemSchema).optional(),
 });
 
 // Query parameters schema for raid instances
@@ -167,6 +184,8 @@ export type RaidResponse = z.infer<typeof raidResponseSchema>;
 export type RaidsListResponse = z.infer<typeof raidsListResponseSchema>;
 export type RaidInstanceSchema = z.infer<typeof raidInstanceSchema>;
 export type CreateRaidInstanceInput = z.infer<typeof createRaidInstanceSchema>;
+export type CreateRaidInstanceWithItemsInput = z.infer<typeof createRaidInstanceWithItemsSchema>;
+export type CreateRaidInstanceDroppedItemInput = z.infer<typeof createRaidInstanceDroppedItemSchema>;
 export type GetRaidInstancesQuery = z.infer<typeof getRaidInstancesQuerySchema>;
 export type RaidParticipantSchema = z.infer<typeof raidParticipantSchema>;
 export type RaidInstanceResponse = z.infer<typeof raidInstanceResponseSchema>;

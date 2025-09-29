@@ -1,6 +1,7 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import type {
   CreateRaidInstanceInput,
+  CreateRaidInstanceWithItemsInput,
   GetRaidInstancesQuery,
   RaidInstanceParams,
 } from '@/routes/raids/raids.schema.ts';
@@ -45,6 +46,26 @@ export class RaidInstancesController {
     }
 
     const raidInstance = await this.raidInstanceService.createRaidInstance(
+      request.body,
+      request.user.id
+    );
+    return reply.status(201).send(raidInstance);
+  }
+
+  async createRaidInstanceWithItems(
+    request: FastifyRequest<{ Body: CreateRaidInstanceWithItemsInput }>,
+    reply: FastifyReply
+  ) {
+    if (!request.user) {
+      return reply.status(401).send({
+        error: {
+          message: 'Authentication required',
+          statusCode: 401,
+        },
+      });
+    }
+
+    const raidInstance = await this.raidInstanceService.createRaidInstanceWithItems(
       request.body,
       request.user.id
     );

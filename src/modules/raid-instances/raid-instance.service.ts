@@ -1,5 +1,6 @@
 import type {
   CreateRaidInstanceInput,
+  CreateRaidInstanceWithItemsInput,
   GetRaidInstancesQuery,
   RaidInstanceResponse,
   RaidInstancesListResponse,
@@ -16,6 +17,7 @@ import { RaidRepository } from '@/modules/raids/raid.repository.ts';
 import { UserRepository } from '@/modules/users/user.repository.ts';
 import { DkpRepository } from '@/modules/dkp/dkp.repository.ts';
 import { DkpCalculationService } from '@/modules/dkp/dkp-calculation.service.ts';
+import { RaidDroppedItemRepository, type CreateRaidDroppedItemData } from '@/modules/raid-dropped-items/raid-dropped-item.repository.ts';
 import { NotFoundError, ValidationError } from '@/libs/errors.ts';
 import type { PrismaClient } from '@prisma/client';
 
@@ -27,7 +29,8 @@ export class RaidInstanceService {
     private raidInstanceRepository: RaidInstanceRepository,
     private raidRepository: RaidRepository,
     private userRepository: UserRepository,
-    private dkpRepository: DkpRepository
+    private dkpRepository: DkpRepository,
+    private raidDroppedItemRepository: RaidDroppedItemRepository
   ) {
     this.dkpCalculationService = new DkpCalculationService();
   }
@@ -153,6 +156,115 @@ export class RaidInstanceService {
       }
 
       return this.toRaidInstanceResponse(createdRaidInstance);
+    });
+  }
+
+  async createRaidInstanceWithItems(
+    data: CreateRaidInstanceWithItemsInput,
+    adminId: string
+  ): Promise<RaidInstanceResponse> {
+    // Validate that raid exists and is active
+    const raid = await this.raidRepository.findById(data.raidId);
+    if (!raid) {
+      throw new NotFoundError('Raid');
+    }
+
+    if (!raid.isActive) {
+      throw new ValidationError('Cannot create instance for inactive raid');
+    }
+
+    // Validate that all participants exist and are active
+    const participants = await Promise.all(
+      data.participantIds.map(async (userId) => {
+        const user = await this.userRepository.findById(userId);
+        if (!user) {
+          throw new NotFoundError(`User with ID ${userId}`);
+        }
+        if (!user.isActive) {
+          throw new ValidationError(`User ${user.nickname} is not active`);
+        }
+        return user;
+      })
+    );
+
+    // Remove duplicates from participant IDs
+    const uniqueParticipantIds = [...new Set(data.participantIds)];
+    if (uniqueParticipantIds.length !== data.participantIds.length) {
+      throw new ValidationError('Duplicate participants are not allowed');
+    }
+
+    // Use transaction to ensure data consistency
+    return this.prisma.$transaction(async () => {
+      // Create raid instance
+      const raidInstanceData: CreateRaidInstanceData = {
+        raidId: data.raidId,
+        createdBy: adminId,
+        notes: data.notes?.trim(),
+      };
+
+      const raidInstance = await this.raidInstanceRepository.create(raidInstanceData);
+
+      // Calculate DKP for each participant and create participant records
+      const participantPromises = participants.map(async (user) => {
+        const dkpAwarded = this.dkpCalculationService.calculateDkpForParticipant(
+          raid.bossLevel,
+          user.gearScore
+        );
+
+        // Create participant record
+        const participantData: CreateRaidParticipantData = {
+          raidInstanceId: raidInstance.id,
+          userId: user.id,
+          gearScoreAtTime: user.gearScore,
+          dkpAwarded,
+        };
+
+        await this.raidInstanceRepository.createParticipant(participantData);
+
+        // Create DKP transaction
+        await this.dkpRepository.createTransaction({
+          userId: user.id,
+          type: 'RAID_REWARD',
+          amount: dkpAwarded,
+          reason: `Raid completion: ${raid.name}`,
+          createdBy: adminId,
+          raidInstanceId: raidInstance.id,
+        });
+
+        return {
+          userId: user.id,
+          dkpAwarded,
+        };
+      });
+
+      await Promise.all(participantPromises);
+
+      // Create dropped items if provided
+      if (data.droppedItems && data.droppedItems.length > 0) {
+        const droppedItemPromises = data.droppedItems.map(async (item) => {
+          const droppedItemData: CreateRaidDroppedItemData = {
+            name: item.name.trim(),
+            category: item.category,
+            grade: item.grade,
+            minDkpBid: item.minDkpBid,
+            raidInstanceId: raidInstance.id,
+            notes: item.notes?.trim(),
+            createdBy: adminId,
+          };
+
+          return this.raidDroppedItemRepository.create(droppedItemData);
+        });
+
+        await Promise.all(droppedItemPromises);
+      }
+
+      // Return the created raid instance with all relations
+      const createdInstance = await this.raidInstanceRepository.findById(raidInstance.id);
+      if (!createdInstance) {
+        throw new Error('Failed to retrieve created raid instance');
+      }
+
+      return this.toRaidInstanceResponse(createdInstance);
     });
   }
 
