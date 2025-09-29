@@ -18,7 +18,7 @@ import lookupsRoutes from '@/routes/lookups/lookups.routes.ts';
 import raidsRoutes from '@/routes/raids/raids.routes.ts';
 import raidInstancesRoutes from '@/routes/raid-instances/raid-instances.routes.ts';
 
-import raidDroppedItemsRoutes from '@/routes/raid-dropped-items/raid-dropped-items-simple.routes.ts';
+import raidDroppedItemsRoutes from '@/routes/raid-dropped-items/raid-dropped-items.routes.ts';
 import dkpRoutes from '@/routes/dkp/dkp.routes.ts';
 
 export async function createApp(): Promise<FastifyInstance> {
