@@ -150,4 +150,32 @@ export class UsersController {
 
     return reply.status(200).send(gear);
   }
+
+  async getCPMembers(
+    request: FastifyRequest,
+    reply: FastifyReply
+  ) {
+    try {
+      const userId = request.user?.id;
+      if (!userId) {
+        return reply.status(401).send({
+          error: {
+            message: 'Unauthorized - User ID not found',
+            statusCode: 401,
+          },
+        });
+      }
+
+      const members = await this.userService.getCPMembers(userId);
+      return reply.status(200).send(members);
+    } catch (error) {
+      console.error('Error in getCPMembers:', error);
+      return reply.status(500).send({
+        error: {
+          message: 'Internal server error',
+          statusCode: 500,
+        },
+      });
+    }
+  }
 }

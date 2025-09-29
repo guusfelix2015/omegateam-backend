@@ -66,7 +66,9 @@ export class CompanyPartyRepository {
     total: number;
   }> {
     const { page = 1, limit = 10, search } = options;
-    const skip = (page - 1) * limit;
+    const pageNum = Number(page);
+    const limitNum = Number(limit);
+    const skip = (pageNum - 1) * limitNum;
 
     const where = search
       ? {
@@ -81,7 +83,7 @@ export class CompanyPartyRepository {
       this.prisma.companyParty.findMany({
         where,
         skip,
-        take: limit,
+        take: limitNum,
         include: {
           users: {
             include: {

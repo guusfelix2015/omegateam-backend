@@ -8,7 +8,7 @@ const raidDroppedItemsSimpleRoutes: FastifyPluginAsync = async fastify => {
 
   // Stats route
   fastify.get('/stats', {
-    preValidation: [fastify.authenticate, fastify.requireAdmin],
+    preValidation: [fastify.authenticate],
     handler: async (_request, _reply) => {
       try {
         // Get all dropped items for stats
@@ -50,7 +50,7 @@ const raidDroppedItemsSimpleRoutes: FastifyPluginAsync = async fastify => {
 
   // List route
   fastify.get('/', {
-    preValidation: [fastify.authenticate, fastify.requireAdmin],
+    preValidation: [fastify.authenticate],
     handler: async (request, _reply) => {
       try {
         const query = request.query as any;

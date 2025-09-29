@@ -77,6 +77,7 @@ export const companyPartyListItemSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   playerCount: z.number(),
+  averageLevel: z.number(),
 });
 
 export const paginationSchema = z.object({

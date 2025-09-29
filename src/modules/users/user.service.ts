@@ -275,4 +275,38 @@ export class UserService {
     // Return updated gear info
     return this.getUserGear(id);
   }
+
+  async getCPMembers(userId: string) {
+    // Get user's company parties
+    const userWithCPs = await this.userRepository.findByIdWithCompanyParties(userId);
+    if (!userWithCPs) {
+      throw new NotFoundError('User not found');
+    }
+
+    // Get all members from user's company parties
+    const cpIds = userWithCPs.companyParties.map(cp => cp.companyPartyId);
+
+    if (cpIds.length === 0) {
+      return [];
+    }
+
+    const members = await this.userRepository.findMembersByCPIds(cpIds);
+
+    // Format response with gear score and basic info
+    return members.map(member => ({
+      id: member.id,
+      name: member.name,
+      nickname: member.nickname,
+      avatar: member.avatar,
+      lvl: member.lvl,
+      role: member.role,
+      gearScore: member.gearScore,
+      isActive: member.isActive,
+      companyParties: member.companyParties.map(cp => ({
+        id: cp.companyPartyId,
+        name: cp.companyParty.name,
+        joinedAt: cp.joinedAt.toISOString(),
+      })),
+    }));
+  }
 }

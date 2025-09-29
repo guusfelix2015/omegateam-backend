@@ -392,4 +392,60 @@ export class UserRepository {
 
     return user;
   }
+
+  async findByIdWithCompanyParties(id: string) {
+    return this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        companyParties: {
+          include: {
+            companyParty: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async findMembersByCPIds(cpIds: string[]) {
+    return this.prisma.user.findMany({
+      where: {
+        isActive: true,
+        companyParties: {
+          some: {
+            companyPartyId: {
+              in: cpIds,
+            },
+          },
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        nickname: true,
+        avatar: true,
+        lvl: true,
+        role: true,
+        gearScore: true,
+        isActive: true,
+        companyParties: {
+          include: {
+            companyParty: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
+  }
 }

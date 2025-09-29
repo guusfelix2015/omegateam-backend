@@ -31,6 +31,7 @@ export interface CompanyPartyListResponse {
   createdAt: string;
   updatedAt: string;
   playerCount: number;
+  averageLevel: number;
 }
 
 export interface PaginatedCompanyPartiesResponse {
@@ -97,15 +98,24 @@ export class CompanyPartyService {
     const hasNext = page < totalPages;
     const hasPrev = page > 1;
 
-    const companyParties: CompanyPartyListResponse[] = data.map(cp => ({
-      id: cp.id,
-      name: cp.name,
-      description: cp.description,
-      maxMembers: cp.maxMembers,
-      createdAt: cp.createdAt.toISOString(),
-      updatedAt: cp.updatedAt.toISOString(),
-      playerCount: cp.users.length,
-    }));
+    const companyParties: CompanyPartyListResponse[] = data.map(cp => {
+      // Calculate average level of active members
+      const activeMembers = cp.users.filter(userCP => userCP.user.isActive);
+      const averageLevel = activeMembers.length > 0
+        ? Math.round(activeMembers.reduce((sum, userCP) => sum + userCP.user.lvl, 0) / activeMembers.length)
+        : 0;
+
+      return {
+        id: cp.id,
+        name: cp.name,
+        description: cp.description,
+        maxMembers: cp.maxMembers,
+        createdAt: cp.createdAt.toISOString(),
+        updatedAt: cp.updatedAt.toISOString(),
+        playerCount: cp.users.length,
+        averageLevel,
+      };
+    });
 
     return {
       data: companyParties,

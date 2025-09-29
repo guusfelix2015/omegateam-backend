@@ -133,6 +133,14 @@ const usersRoutes: FastifyPluginAsync = async fastify => {
       return usersController.getUserGearById(request, reply);
     },
   });
+
+  // GET /users/cp-members - Get CP members for current user (allows PLAYER to see members of their CPs)
+  fastify.get('/cp-members', {
+    preValidation: [fastify.authenticate],
+    handler: async (request, reply) => {
+      return usersController.getCPMembers(request, reply);
+    },
+  });
 };
 
 export default usersRoutes;
