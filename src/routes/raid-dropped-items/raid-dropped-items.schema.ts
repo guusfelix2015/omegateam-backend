@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-// Item category enum (updated with COMUM)
+// Item category enum (matching Prisma schema)
 export const itemCategorySchema = z.enum([
   'HELMET',
   'ARMOR',
@@ -15,7 +15,7 @@ export const itemCategorySchema = z.enum([
   'COMUM',
 ]);
 
-// Item grade enum
+// Item grade enum (matching Prisma schema)
 export const itemGradeSchema = z.enum(['D', 'C', 'B', 'A', 'S']);
 
 // Base raid dropped item schema

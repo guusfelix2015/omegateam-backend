@@ -86,8 +86,8 @@ export const raidInstanceSchema = z.object({
 // Dropped item for raid instance creation
 export const createRaidInstanceDroppedItemSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório').max(100, 'Nome muito longo'),
-  category: z.enum(['WEAPON', 'ARMOR', 'ACCESSORY', 'CONSUMABLE', 'MISC']),
-  grade: z.enum(['NO_GRADE', 'D', 'C', 'B', 'A', 'S']),
+  category: z.enum(['HELMET', 'ARMOR', 'PANTS', 'BOOTS', 'GLOVES', 'NECKLACE', 'EARRING', 'RING', 'SHIELD', 'WEAPON', 'COMUM']),
+  grade: z.enum(['D', 'C', 'B', 'A', 'S']),
   minDkpBid: z.number().int().min(0, 'Lance mínimo deve ser não-negativo'),
   notes: z.string().max(500, 'Notas muito longas').optional(),
 });
