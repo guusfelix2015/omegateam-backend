@@ -42,6 +42,7 @@ export interface RaidDroppedItemResponse {
   category: ItemCategory;
   grade: ItemGrade;
   minDkpBid: number;
+  hasBeenAuctioned: boolean;
   raidInstanceId: string;
   droppedAt: string;
   createdBy: string;
@@ -75,7 +76,7 @@ export class RaidDroppedItemService {
   constructor(
     private raidDroppedItemRepository: RaidDroppedItemRepository,
     private raidInstanceRepository: RaidInstanceRepository
-  ) {}
+  ) { }
 
   async createRaidDroppedItem(
     data: CreateRaidDroppedItemInput,
@@ -219,6 +220,7 @@ export class RaidDroppedItemService {
       category: item.category,
       grade: item.grade,
       minDkpBid: item.minDkpBid,
+      hasBeenAuctioned: item.hasBeenAuctioned,
       raidInstanceId: item.raidInstanceId,
       droppedAt: item.droppedAt.toISOString(),
       createdBy: item.createdBy,

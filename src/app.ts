@@ -20,6 +20,7 @@ import raidInstancesRoutes from '@/routes/raid-instances/raid-instances.routes.t
 
 import raidDroppedItemsRoutes from '@/routes/raid-dropped-items/raid-dropped-items.routes.ts';
 import dkpRoutes from '@/routes/dkp/dkp.routes.ts';
+import auctionsRoutes from '@/routes/auctions/auctions.routes.ts';
 
 export async function createApp(): Promise<FastifyInstance> {
   const app = Fastify({
@@ -63,6 +64,7 @@ export async function createApp(): Promise<FastifyInstance> {
   await app.register(raidInstancesRoutes, { prefix: '/raid-instances' });
   await app.register(raidDroppedItemsRoutes, { prefix: '/raid-dropped-items' });
   await app.register(dkpRoutes, { prefix: '/dkp' });
+  await app.register(auctionsRoutes, { prefix: '/auctions' });
 
   // 404 handler
   app.setNotFoundHandler(async (request, reply) => {

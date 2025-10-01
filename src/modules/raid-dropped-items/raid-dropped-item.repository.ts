@@ -47,7 +47,7 @@ export type RaidDroppedItemWithRelations = Prisma.RaidDroppedItemGetPayload<{
 }>;
 
 export class RaidDroppedItemRepository {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: PrismaClient) { }
 
   async create(data: CreateRaidDroppedItemData): Promise<RaidDroppedItem> {
     try {
@@ -146,10 +146,33 @@ export class RaidDroppedItemRepository {
     });
   }
 
-  async findByRaidInstanceId(raidInstanceId: string): Promise<RaidDroppedItem[]> {
+  async findByRaidInstanceId(raidInstanceId: string): Promise<any[]> {
     return this.prisma.raidDroppedItem.findMany({
       where: { raidInstanceId },
       orderBy: { droppedAt: 'desc' },
+      include: {
+        auctionItems: {
+          include: {
+            auction: {
+              select: {
+                id: true,
+                createdAt: true,
+              },
+            },
+            currentWinner: {
+              select: {
+                id: true,
+                name: true,
+                nickname: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 1,
+        },
+      },
     });
   }
 
