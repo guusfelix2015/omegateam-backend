@@ -18,6 +18,21 @@ import type {
   GetWonItemsOptions,
 } from './auction.types.ts';
 
+// Helper function to calculate time remaining based on timestamp
+export function calculateTimeRemaining(
+  startedAt: Date | null,
+  defaultTimerSeconds: number
+): number | null {
+  if (!startedAt) return null;
+
+  const now = Date.now();
+  const start = startedAt.getTime();
+  const elapsed = Math.floor((now - start) / 1000);
+  const remaining = defaultTimerSeconds - elapsed;
+
+  return Math.max(0, remaining);
+}
+
 // Types for raw SQL queries
 interface CategoryStatsRow {
   category: string;

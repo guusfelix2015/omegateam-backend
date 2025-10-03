@@ -1,5 +1,6 @@
 import { NotFoundError, UnauthorizedError, ValidationError } from '@/libs/errors.ts';
 import type { AuctionRepository } from './auction.repository.ts';
+import { calculateTimeRemaining } from './auction.repository.ts';
 import type { DkpRepository } from '../dkp/dkp.repository.ts';
 import type { UserRepository } from '../users/user.repository.ts';
 import type {
@@ -120,10 +121,10 @@ export class AuctionService {
     await this.auctionRepository.createBid(data);
 
     // Update auction item with new current bid
+    // NOTE: NOT updating timeRemaining - it will be calculated dynamically
     await this.auctionRepository.updateAuctionItem(auctionItem.id, {
       currentBid: data.amount,
       currentWinnerId: data.userId,
-      timeRemaining: auctionItem.timeRemaining || 20, // Reset timer (will be handled by polling)
     });
 
     // Get the auction to return
@@ -220,7 +221,22 @@ export class AuctionService {
       sortOrder: 'desc',
     });
 
-    return result.data[0] || null;
+    const auction = result.data[0] || null;
+
+    if (!auction) return null;
+
+    // Calculate timeRemaining dynamically for each item
+    const itemsWithCalculatedTimer = auction.items.map(item => ({
+      ...item,
+      timeRemaining: item.status === 'IN_AUCTION'
+        ? calculateTimeRemaining(item.startedAt, auction.defaultTimerSeconds)
+        : item.timeRemaining, // Keep original value for non-active items
+    }));
+
+    return {
+      ...auction,
+      items: itemsWithCalculatedTimer,
+    };
   }
 
   // Get user's won items
@@ -274,7 +290,7 @@ export class AuctionService {
     return this.auctionRepository.getAuctionById(auctionId);
   }
 
-  // Update timer (called by polling mechanism)
+  // Update timer (called by polling mechanism) - DEPRECATED
   async updateTimer(auctionItemId: string, timeRemaining: number): Promise<void> {
     if (timeRemaining <= 0) {
       // Timer reached 0 - finalize item
@@ -284,6 +300,24 @@ export class AuctionService {
       await this.auctionRepository.updateAuctionItem(auctionItemId, {
         timeRemaining,
       });
+    }
+  }
+
+  // Check for expired timers (called by cron job)
+  async checkExpiredTimers(): Promise<void> {
+    const auction = await this.getActiveAuction();
+    if (!auction) return;
+
+    const currentItem = auction.items.find(i => i.status === 'IN_AUCTION');
+    if (!currentItem) return;
+
+    const timeRemaining = calculateTimeRemaining(
+      currentItem.startedAt,
+      auction.defaultTimerSeconds
+    );
+
+    if (timeRemaining !== null && timeRemaining <= 0) {
+      await this.finalizeAuctionItem(currentItem.id);
     }
   }
 
