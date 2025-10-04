@@ -31,15 +31,21 @@ async function start() {
     const userRepository = new UserRepository(prisma);
     const auctionService = new AuctionService(auctionRepository, dkpRepository, userRepository);
 
+    let cronCounter = 0;
     timerCheckInterval = setInterval(async () => {
       try {
+        cronCounter++;
+        // Log every 10 seconds to confirm cron is running
+        if (cronCounter % 10 === 0) {
+          console.log(`[CRON] Timer check job running... (${cronCounter} checks)`);
+        }
         await auctionService.checkExpiredTimers();
       } catch (error) {
         app.log.error('Error checking expired timers:', error);
       }
     }, 1000); // Check every 1 second
 
-    app.log.info('⏰ Auction timer check job started');
+    app.log.info('⏰ Auction timer check job started (checking every 1 second)');
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);

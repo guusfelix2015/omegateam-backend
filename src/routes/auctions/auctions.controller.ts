@@ -87,16 +87,7 @@ export class AuctionsController {
   // Get active auction
   async getActiveAuction(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     const auction = await this.auctionService.getActiveAuction();
-
-    if (!auction) {
-      return reply.status(404).send({
-        error: {
-          message: 'No active auction found',
-          statusCode: 404,
-        },
-      });
-    }
-
+    // Return null instead of 404 when no active auction
     return reply.send(auction);
   }
 

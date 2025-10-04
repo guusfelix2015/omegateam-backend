@@ -120,11 +120,14 @@ export class AuctionService {
     // Create new bid
     await this.auctionRepository.createBid(data);
 
+    console.log(`[BID] 🔨 New bid placed: ${data.amount} DKP by user ${data.userId.slice(-8)} on item ${auctionItem.id.slice(-8)} - Timer RESET`);
+
     // Update auction item with new current bid
-    // NOTE: NOT updating timeRemaining - it will be calculated dynamically
+    // RESET timer by updating startedAt to NOW (common auction behavior)
     await this.auctionRepository.updateAuctionItem(auctionItem.id, {
       currentBid: data.amount,
       currentWinnerId: data.userId,
+      startedAt: new Date(), // Reset timer when bid is placed
     });
 
     // Get the auction to return
@@ -134,9 +137,12 @@ export class AuctionService {
 
   // Finalize auction item (called when timer reaches 0)
   async finalizeAuctionItem(auctionItemId: string): Promise<void> {
+    console.log(`[FINALIZE] Starting finalization for item ${auctionItemId.slice(-8)}`);
+
     const auctionItem = await this.auctionRepository.getAuctionItemById(auctionItemId);
 
     if (auctionItem.status !== 'IN_AUCTION') {
+      console.log(`[FINALIZE] ⚠️ Item ${auctionItemId.slice(-8)} is not IN_AUCTION (status: ${auctionItem.status})`);
       throw new ValidationError('Item is not in auction');
     }
 
@@ -144,6 +150,8 @@ export class AuctionService {
 
     // Check if there are bids
     if (auctionItem.currentBid && auctionItem.currentWinnerId) {
+      console.log(`[FINALIZE] 💰 Item ${auctionItemId.slice(-8)} SOLD for ${auctionItem.currentBid} DKP to user ${auctionItem.currentWinnerId.slice(-8)}`);
+
       // Item sold - debit DKP
       await this.auctionRepository.updateAuctionItem(auctionItemId, {
         status: 'SOLD',
@@ -168,6 +176,8 @@ export class AuctionService {
         auctionItemId: auctionItemId,
       });
     } else {
+      console.log(`[FINALIZE] ❌ Item ${auctionItemId.slice(-8)} had NO_BIDS`);
+
       // No bids - mark as NO_BIDS
       await this.auctionRepository.updateAuctionItem(auctionItemId, {
         status: 'NO_BIDS',
@@ -179,6 +189,8 @@ export class AuctionService {
     const nextItem = auction.items.find((item) => item.status === 'WAITING');
 
     if (nextItem) {
+      console.log(`[FINALIZE] ➡️ Starting next item ${nextItem.id.slice(-8)}`);
+
       // Start next item
       await this.auctionRepository.updateAuctionItem(nextItem.id, {
         status: 'IN_AUCTION',
@@ -186,6 +198,8 @@ export class AuctionService {
         startedAt: new Date(),
       });
     } else {
+      console.log(`[FINALIZE] 🏁 All items done - Finishing auction ${auction.id.slice(-8)}`);
+
       // All items done - finish auction
       await this.auctionRepository.updateAuction(auction.id, {
         status: 'FINISHED',
@@ -305,19 +319,51 @@ export class AuctionService {
 
   // Check for expired timers (called by cron job)
   async checkExpiredTimers(): Promise<void> {
-    const auction = await this.getActiveAuction();
-    if (!auction) return;
+    try {
+      const auction = await this.getActiveAuction();
+      if (!auction) {
+        // No active auction - this is normal
+        return;
+      }
 
-    const currentItem = auction.items.find(i => i.status === 'IN_AUCTION');
-    if (!currentItem) return;
+      const currentItem = auction.items.find(i => i.status === 'IN_AUCTION');
+      if (!currentItem) {
+        // No item in auction - this is normal (between items)
+        return;
+      }
 
-    const timeRemaining = calculateTimeRemaining(
-      currentItem.startedAt,
-      auction.defaultTimerSeconds
-    );
+      // Check if startedAt exists
+      if (!currentItem.startedAt) {
+        console.error(`[AUCTION TIMER] ⚠️ Item ${currentItem.id.slice(-8)} has no startedAt timestamp!`);
+        return;
+      }
 
-    if (timeRemaining !== null && timeRemaining <= 0) {
-      await this.finalizeAuctionItem(currentItem.id);
+      const timeRemaining = calculateTimeRemaining(
+        currentItem.startedAt,
+        auction.defaultTimerSeconds
+      );
+
+      // Log timer status for debugging (last 5 seconds)
+      if (timeRemaining !== null && timeRemaining <= 5 && timeRemaining > 0) {
+        console.log(`[AUCTION TIMER] Item ${currentItem.id.slice(-8)} - Time remaining: ${timeRemaining}s`);
+      }
+
+      // Check if timer expired
+      if (timeRemaining !== null && timeRemaining <= 0) {
+        console.log(`[AUCTION TIMER] ⏰ Timer expired for item ${currentItem.id.slice(-8)} - Finalizing...`);
+        console.log(`[AUCTION TIMER] Item details: startedAt=${currentItem.startedAt}, defaultTimer=${auction.defaultTimerSeconds}s`);
+
+        try {
+          await this.finalizeAuctionItem(currentItem.id);
+          console.log(`[AUCTION TIMER] ✅ Item ${currentItem.id.slice(-8)} finalized successfully`);
+        } catch (error) {
+          console.error(`[AUCTION TIMER] ❌ Error finalizing item ${currentItem.id.slice(-8)}:`, error);
+          // Don't throw - let cron continue
+        }
+      }
+    } catch (error) {
+      console.error('[AUCTION TIMER] ❌ Error in checkExpiredTimers:', error);
+      // Don't throw - let cron continue
     }
   }
 
