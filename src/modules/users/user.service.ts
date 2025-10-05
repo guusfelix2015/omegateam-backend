@@ -1,4 +1,4 @@
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient, ItemCategory } from '@prisma/client';
 import type {
   CreateUserInput,
   UpdateUserInput,
@@ -14,6 +14,21 @@ import { CompanyPartyRepository } from '@/modules/company-parties/company-party.
 import { ItemRepository } from '@/modules/items/item.repository.ts';
 import { NotFoundError, ValidationError } from '@/libs/errors.ts';
 import { PasswordUtils } from '@/libs/password.ts';
+
+// Category limits for gear items
+const CATEGORY_LIMITS: Record<string, number> = {
+  RING: 2,
+  EARRING: 2,
+  NECKLACE: 1,
+  HELMET: 1,
+  ARMOR: 1,
+  PANTS: 1,
+  BOOTS: 1,
+  GLOVES: 1,
+  SHIELD: 1,
+  WEAPON: 1,
+  COMUM: 999, // Effectively unlimited
+};
 
 export class UserService {
   private userRepository: UserRepository;
@@ -233,8 +248,11 @@ export class UserService {
       throw new NotFoundError('User');
     }
 
+    // Get unique item IDs
+    const uniqueItemIds = Array.from(new Set(user.ownedItemIds));
+
     // Get the actual item details
-    const ownedItems = await this.itemRepository.findByIds(user.ownedItemIds);
+    const ownedItems = await this.itemRepository.findByIds(uniqueItemIds);
 
     return {
       ownedItemIds: user.ownedItemIds,
@@ -252,6 +270,63 @@ export class UserService {
     };
   }
 
+  /**
+   * Validate that the gear configuration respects category limits
+   */
+  private async validateGearLimits(itemIds: string[]): Promise<void> {
+    if (itemIds.length === 0) {
+      return;
+    }
+
+    // Get unique item IDs and fetch items
+    const uniqueIds = Array.from(new Set(itemIds));
+    const items = await this.itemRepository.findByIds(uniqueIds);
+
+    // Create a map of id -> item for quick lookup
+    const itemMap = new Map(items.map(item => [item.id, item]));
+
+    // Count items by category
+    const categoryCounts = new Map<string, number>();
+    itemIds.forEach(id => {
+      const item = itemMap.get(id);
+      if (item) {
+        const count = categoryCounts.get(item.category) || 0;
+        categoryCounts.set(item.category, count + 1);
+      }
+    });
+
+    // Check limits
+    for (const [category, count] of categoryCounts.entries()) {
+      const limit = CATEGORY_LIMITS[category] || 1;
+      if (count > limit) {
+        const categoryName = this.getCategoryDisplayName(category);
+        throw new ValidationError(
+          `Não é possível equipar mais de ${limit} ${categoryName}(s)`
+        );
+      }
+    }
+  }
+
+  /**
+   * Get display name for category (Portuguese)
+   */
+  private getCategoryDisplayName(category: string): string {
+    const names: Record<string, string> = {
+      RING: 'anel',
+      EARRING: 'brinco',
+      NECKLACE: 'colar',
+      HELMET: 'capacete',
+      ARMOR: 'armadura',
+      PANTS: 'calça',
+      BOOTS: 'bota',
+      GLOVES: 'luva',
+      SHIELD: 'escudo',
+      WEAPON: 'arma',
+      COMUM: 'item comum',
+    };
+    return names[category] || category.toLowerCase();
+  }
+
   async updateUserGear(id: string, data: UpdateUserGearInput): Promise<UserGearResponse> {
     // Check if user exists
     const userExists = await this.userRepository.exists(id);
@@ -259,15 +334,30 @@ export class UserService {
       throw new NotFoundError('User');
     }
 
-    // Validate that all item IDs exist
-    const itemsExist = await this.itemRepository.validateItemIds(data.ownedItemIds);
+    // Validate that all unique item IDs exist
+    const uniqueItemIds = Array.from(new Set(data.ownedItemIds));
+    const itemsExist = await this.itemRepository.validateItemIds(uniqueItemIds);
     if (!itemsExist) {
       throw new ValidationError('One or more item IDs are invalid');
     }
 
-    // Calculate gear score
-    const items = await this.itemRepository.findByIds(data.ownedItemIds);
-    const gearScore = items.reduce((total, item) => total + item.valorGsInt, 0);
+    // Validate category limits
+    await this.validateGearLimits(data.ownedItemIds);
+
+    // Count occurrences of each item ID
+    const itemCounts = new Map<string, number>();
+    data.ownedItemIds.forEach(id => {
+      itemCounts.set(id, (itemCounts.get(id) || 0) + 1);
+    });
+
+    // Fetch unique items
+    const items = await this.itemRepository.findByIds(uniqueItemIds);
+
+    // Calculate gear score with quantities
+    const gearScore = items.reduce((total, item) => {
+      const quantity = itemCounts.get(item.id) || 1;
+      return total + (item.valorGsInt * quantity);
+    }, 0);
 
     // Update user gear
     await this.userRepository.updateUserGear(id, data.ownedItemIds, gearScore);
