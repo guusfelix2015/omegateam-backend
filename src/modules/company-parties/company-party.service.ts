@@ -186,7 +186,7 @@ export class CompanyPartyService {
   async addPlayerToCompanyParty(
     companyPartyId: string,
     userId: string
-  ): Promise<boolean> {
+  ): Promise<CompanyPartyResponse | null> {
     const companyParty =
       await this.companyPartyRepository.findById(companyPartyId);
     if (!companyParty) {
@@ -202,13 +202,18 @@ export class CompanyPartyService {
       throw new Error('Player is already a member of this Company Party');
     }
 
-    return this.companyPartyRepository.addPlayer(companyPartyId, userId);
+    const success = await this.companyPartyRepository.addPlayer(companyPartyId, userId);
+    if (!success) {
+      return null;
+    }
+
+    return this.getCompanyPartyById(companyPartyId);
   }
 
   async removePlayerFromCompanyParty(
     companyPartyId: string,
     userId: string
-  ): Promise<boolean> {
+  ): Promise<CompanyPartyResponse | null> {
     const companyParty =
       await this.companyPartyRepository.findById(companyPartyId);
     if (!companyParty) {
@@ -223,7 +228,12 @@ export class CompanyPartyService {
       throw new Error('Player is not a member of this Company Party');
     }
 
-    return this.companyPartyRepository.removePlayer(companyPartyId, userId);
+    const success = await this.companyPartyRepository.removePlayer(companyPartyId, userId);
+    if (!success) {
+      return null;
+    }
+
+    return this.getCompanyPartyById(companyPartyId);
   }
 
   async getUserCompanyParties(

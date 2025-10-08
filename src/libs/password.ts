@@ -32,7 +32,10 @@ export class PasswordUtils {
    * @param hashedPassword - Hashed password from database
    * @returns Promise<boolean> - True if passwords match
    */
-  static async compare(password: string, hashedPassword: string): Promise<boolean> {
+  static async compare(
+    password: string,
+    hashedPassword: string
+  ): Promise<boolean> {
     if (!password || !hashedPassword) {
       return false;
     }
@@ -58,7 +61,10 @@ export class PasswordUtils {
    * @param password - Plain text password
    * @returns object with validation result
    */
-  static validatePassword(password: string): { isValid: boolean; errors: string[] } {
+  static validatePassword(password: string): {
+    isValid: boolean;
+    errors: string[];
+  } {
     const errors: string[] = [];
 
     if (!password) {
@@ -89,7 +95,7 @@ export class PasswordUtils {
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 }

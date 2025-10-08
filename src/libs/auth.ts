@@ -138,8 +138,13 @@ export async function login(
   });
 }
 
-export function requireRole(allowedRoles: ('ADMIN' | 'PLAYER' | 'CP_LEADER')[]) {
-  return async (request: FastifyRequest, _reply: FastifyReply): Promise<void> => {
+export function requireRole(
+  allowedRoles: ('ADMIN' | 'PLAYER' | 'CP_LEADER')[]
+) {
+  return async (
+    request: FastifyRequest,
+    _reply: FastifyReply
+  ): Promise<void> => {
     if (!request.user) {
       throw new UnauthorizedError('Authentication required');
     }

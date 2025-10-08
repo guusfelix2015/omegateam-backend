@@ -251,9 +251,9 @@ const indexRoutes: FastifyPluginAsync = async fastify => {
         updatedAt: user.updatedAt.toISOString(),
         classe: user.classe
           ? {
-            ...user.classe,
-            createdAt: user.classe.createdAt.toISOString(),
-          }
+              ...user.classe,
+              createdAt: user.classe.createdAt.toISOString(),
+            }
           : null,
       });
     },

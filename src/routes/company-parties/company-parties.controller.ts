@@ -10,7 +10,7 @@ import type {
 } from './company-parties.schema.ts';
 
 export class CompanyPartiesController {
-  constructor(private companyPartyService: CompanyPartyService) {}
+  constructor(private companyPartyService: CompanyPartyService) { }
 
   async createCompanyParty(
     request: FastifyRequest<{ Body: CreateCompanyPartyInput }>,
@@ -169,12 +169,12 @@ export class CompanyPartiesController {
     reply: FastifyReply
   ) {
     try {
-      const success = await this.companyPartyService.addPlayerToCompanyParty(
+      const companyParty = await this.companyPartyService.addPlayerToCompanyParty(
         request.params.id,
         request.body.userId
       );
 
-      if (!success) {
+      if (!companyParty) {
         return reply.status(500).send({
           error: {
             message: 'Failed to add player to Company Party',
@@ -183,9 +183,7 @@ export class CompanyPartiesController {
         });
       }
 
-      return reply.status(201).send({
-        message: 'Player added to Company Party successfully',
-      });
+      return reply.status(201).send(companyParty);
     } catch (error) {
       if (error instanceof Error) {
         if (error.message.includes('not found')) {
@@ -219,13 +217,13 @@ export class CompanyPartiesController {
     reply: FastifyReply
   ) {
     try {
-      const success =
+      const companyParty =
         await this.companyPartyService.removePlayerFromCompanyParty(
           request.params.id,
           request.params.playerId
         );
 
-      if (!success) {
+      if (!companyParty) {
         return reply.status(500).send({
           error: {
             message: 'Failed to remove player from Company Party',
@@ -234,9 +232,7 @@ export class CompanyPartiesController {
         });
       }
 
-      return reply.status(200).send({
-        message: 'Player removed from Company Party successfully',
-      });
+      return reply.status(200).send(companyParty);
     } catch (error) {
       if (error instanceof Error) {
         if (error.message.includes('not found')) {
