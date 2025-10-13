@@ -22,9 +22,9 @@ const itemsRoutes: FastifyPluginAsync = async fastify => {
         type: 'object',
         properties: {
           page: { type: 'integer', minimum: 1, default: 1 },
-          limit: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
+          limit: { type: 'integer', minimum: 1, maximum: 1000, default: 10 },
           search: { type: 'string' },
-          category: { type: 'string', enum: ['HELMET', 'ARMOR', 'PANTS', 'BOOTS', 'GLOVES', 'NECKLACE', 'EARRING', 'RING', 'SHIELD', 'WEAPON'] },
+          category: { type: 'string', enum: ['HELMET', 'ARMOR', 'PANTS', 'BOOTS', 'GLOVES', 'NECKLACE', 'EARRING', 'RING', 'SHIELD', 'WEAPON', 'COMUM'] },
           grade: { type: 'string', enum: ['D', 'C', 'B', 'A', 'S'] },
           sortBy: { type: 'string', enum: ['name', 'category', 'grade', 'valorGsInt', 'valorDkp', 'createdAt'], default: 'createdAt' },
           sortOrder: { type: 'string', enum: ['asc', 'desc'], default: 'desc' },
