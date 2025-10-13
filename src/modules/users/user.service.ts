@@ -51,9 +51,9 @@ export class UserService {
         updatedAt: user.updatedAt.toISOString(),
         classe: user.classe
           ? {
-            ...user.classe,
-            createdAt: user.classe.createdAt.toISOString(),
-          }
+              ...user.classe,
+              createdAt: user.classe.createdAt.toISOString(),
+            }
           : null,
       })),
       pagination: {
@@ -95,9 +95,9 @@ export class UserService {
       updatedAt: user.updatedAt.toISOString(),
       classe: user.classe
         ? {
-          ...user.classe,
-          createdAt: user.classe.createdAt.toISOString(),
-        }
+            ...user.classe,
+            createdAt: user.classe.createdAt.toISOString(),
+          }
         : null,
       companyParties,
     };
@@ -107,7 +107,9 @@ export class UserService {
     // Validate password
     const passwordValidation = PasswordUtils.validatePassword(data.password);
     if (!passwordValidation.isValid) {
-      throw new Error(`Password validation failed: ${passwordValidation.errors.join(', ')}`);
+      throw new Error(
+        `Password validation failed: ${passwordValidation.errors.join(', ')}`
+      );
     }
 
     // Hash the password
@@ -153,7 +155,9 @@ export class UserService {
     if (data.password) {
       const passwordValidation = PasswordUtils.validatePassword(data.password);
       if (!passwordValidation.isValid) {
-        throw new Error(`Password validation failed: ${passwordValidation.errors.join(', ')}`);
+        throw new Error(
+          `Password validation failed: ${passwordValidation.errors.join(', ')}`
+        );
       }
       updateData.password = await PasswordUtils.hash(data.password);
     }
@@ -166,9 +170,9 @@ export class UserService {
       updatedAt: user.updatedAt.toISOString(),
       classe: user.classe
         ? {
-          ...user.classe,
-          createdAt: user.classe.createdAt.toISOString(),
-        }
+            ...user.classe,
+            createdAt: user.classe.createdAt.toISOString(),
+          }
         : null,
     };
   }
@@ -205,9 +209,9 @@ export class UserService {
       updatedAt: user.updatedAt.toISOString(),
       classe: user.classe
         ? {
-          ...user.classe,
-          createdAt: user.classe.createdAt.toISOString(),
-        }
+            ...user.classe,
+            createdAt: user.classe.createdAt.toISOString(),
+          }
         : null,
     };
   }
@@ -216,7 +220,18 @@ export class UserService {
     id: string,
     data: UpdateProfileInput
   ): Promise<UserResponse> {
-    const user = await this.userRepository.update(id, data);
+    let updateData = { ...data };
+    if (data.password) {
+      const passwordValidation = PasswordUtils.validatePassword(data.password);
+      if (!passwordValidation.isValid) {
+        throw new Error(
+          `Password validation failed: ${passwordValidation.errors.join(', ')}`
+        );
+      }
+      updateData.password = await PasswordUtils.hash(data.password);
+    }
+
+    const user = await this.userRepository.update(id, updateData);
 
     return {
       ...user,
@@ -224,9 +239,9 @@ export class UserService {
       updatedAt: user.updatedAt.toISOString(),
       classe: user.classe
         ? {
-          ...user.classe,
-          createdAt: user.classe.createdAt.toISOString(),
-        }
+            ...user.classe,
+            createdAt: user.classe.createdAt.toISOString(),
+          }
         : null,
     };
   }
@@ -327,7 +342,10 @@ export class UserService {
     return names[category] || category.toLowerCase();
   }
 
-  async updateUserGear(id: string, data: UpdateUserGearInput): Promise<UserGearResponse> {
+  async updateUserGear(
+    id: string,
+    data: UpdateUserGearInput
+  ): Promise<UserGearResponse> {
     // Check if user exists
     const userExists = await this.userRepository.exists(id);
     if (!userExists) {
@@ -356,7 +374,7 @@ export class UserService {
     // Calculate gear score with quantities
     const gearScore = items.reduce((total, item) => {
       const quantity = itemCounts.get(item.id) || 1;
-      return total + (item.valorGsInt * quantity);
+      return total + item.valorGsInt * quantity;
     }, 0);
 
     // Update user gear
@@ -368,7 +386,8 @@ export class UserService {
 
   async getCPMembers(userId: string) {
     // Get user's company parties
-    const userWithCPs = await this.userRepository.findByIdWithCompanyParties(userId);
+    const userWithCPs =
+      await this.userRepository.findByIdWithCompanyParties(userId);
     if (!userWithCPs) {
       throw new NotFoundError('User not found');
     }
