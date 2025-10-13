@@ -173,6 +173,8 @@ const indexRoutes: FastifyPluginAsync = async fastify => {
             isActive: { type: 'boolean' },
             lvl: { type: 'number' },
             classeId: { type: 'string', nullable: true },
+            playerType: { type: 'string', enum: ['PVP', 'PVE'], nullable: true },
+            clan: { type: 'string', enum: ['CLA1', 'CLA2'], nullable: true },
             bagUrl: { type: 'string', nullable: true },
             classe: {
               type: 'object',
@@ -223,6 +225,8 @@ const indexRoutes: FastifyPluginAsync = async fastify => {
           isActive: true,
           lvl: true,
           classeId: true,
+          playerType: true,
+          clan: true,
           bagUrl: true,
           createdAt: true,
           updatedAt: true,
@@ -251,9 +255,9 @@ const indexRoutes: FastifyPluginAsync = async fastify => {
         updatedAt: user.updatedAt.toISOString(),
         classe: user.classe
           ? {
-              ...user.classe,
-              createdAt: user.classe.createdAt.toISOString(),
-            }
+            ...user.classe,
+            createdAt: user.classe.createdAt.toISOString(),
+          }
           : null,
       });
     },

@@ -3,6 +3,12 @@ import { z } from 'zod';
 // User role enum
 export const userRoleSchema = z.enum(['ADMIN', 'PLAYER', 'CP_LEADER']);
 
+// Player type enum
+export const playerTypeSchema = z.enum(['PVP', 'PVE']);
+
+// Clan enum
+export const clanSchema = z.enum(['CLA1', 'CLA2']);
+
 // Company Party association schema
 export const userCompanyPartySchema = z.object({
   id: z.string(),
@@ -34,6 +40,8 @@ export const userSchema = z.object({
   lvl: z.number().int().min(1).max(85),
   role: userRoleSchema,
   classeId: z.string().cuid().nullable(),
+  playerType: playerTypeSchema.nullable().optional(),
+  clan: clanSchema.nullable().optional(),
   ownedItemIds: z.array(z.string().cuid()).default([]),
   gearScore: z.number().int().min(0).default(0),
   dkpPoints: z.number().int().min(0).default(0),
@@ -89,6 +97,8 @@ export const updateUserSchema = z.object({
   lvl: z.number().int().min(1).max(85).optional(),
   role: userRoleSchema.optional(),
   classeId: z.string().cuid().nullable().optional(), // User can update their class
+  playerType: playerTypeSchema.nullable().optional(),
+  clan: clanSchema.nullable().optional(),
 });
 
 // Update profile schema (restricted fields for user self-update)
@@ -115,6 +125,8 @@ export const updateProfileSchema = z.object({
   avatar: z.string().url('Invalid avatar URL').nullable().optional(),
   lvl: z.number().int().min(1).max(85).optional(),
   classeId: z.string().cuid().nullable().optional(),
+  playerType: playerTypeSchema.nullable().optional(),
+  clan: clanSchema.nullable().optional(),
   bagUrl: z.string().url('Invalid bag URL').nullable().optional(),
 });
 

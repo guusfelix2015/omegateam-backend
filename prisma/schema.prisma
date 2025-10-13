@@ -16,6 +16,16 @@ enum UserRole {
   CP_LEADER
 }
 
+enum PlayerType {
+  PVP
+  PVE
+}
+
+enum Clan {
+  CLA1
+  CLA2
+}
+
 enum ItemCategory {
   HELMET
   ARMOR
@@ -46,15 +56,17 @@ model User {
   password     String?  // Optional for demo purposes
   avatar       String?
   isActive     Boolean  @default(true)
-  lvl          Int      @default(1)
+  lvl          Int         @default(1)
   role         UserRole
-  classeId     String?  // Optional - user can set later
-  ownedItemIds String[] @default([]) @map("owned_item_ids") // Array of item IDs that user owns
-  gearScore    Int      @default(0) @map("gear_score") // Total gear score from owned items
-  dkpPoints    Int      @default(0) @map("dkp_points") // DKP points balance
-  bagUrl       String?  @map("bag_url") // Optional URL for inventory image
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  classeId     String?     // Optional - user can set later
+  playerType   PlayerType? @map("player_type") // Optional - PVP or PVE
+  clan         Clan?       // Optional - CLA1 or CLA2
+  ownedItemIds String[]    @default([]) @map("owned_item_ids") // Array of item IDs that user owns
+  gearScore    Int         @default(0) @map("gear_score") // Total gear score from owned items
+  dkpPoints    Int         @default(0) @map("dkp_points") // DKP points balance
+  bagUrl       String?     @map("bag_url") // Optional URL for inventory image
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
   // Relations
   classe              Classe?            @relation(fields: [classeId], references: [id])
