@@ -52,7 +52,6 @@ export const userSchema = z.object({
   companyParties: z.array(userCompanyPartySchema).optional(),
 });
 
-
 export const createUserSchema = z.object({
   email: z.string().email('Invalid email format'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -69,7 +68,12 @@ export const createUserSchema = z.object({
   isActive: z.boolean().default(true),
   lvl: z.number().int().min(1).max(85).default(1),
   role: userRoleSchema.default('PLAYER'),
-  classeId: z.string().cuid().nullable().optional().transform(val => val === '' ? null : val),
+  classeId: z
+    .string()
+    .cuid()
+    .nullable()
+    .optional()
+    .transform(val => (val === '' ? null : val)),
 });
 
 export const updateUserSchema = z.object({
@@ -221,6 +225,7 @@ export const userItemSchema = z.object({
   userId: z.string().cuid(),
   itemId: z.string().cuid(),
   enhancementLevel: z.number().int().min(0).max(12),
+  isRare: z.boolean().default(false),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
 });
@@ -230,6 +235,7 @@ export const userItemWithDetailsSchema = z.object({
   id: z.string().cuid(),
   itemId: z.string().cuid(),
   enhancementLevel: z.number().int().min(0).max(12),
+  isRare: z.boolean().default(false),
   item: itemSchema,
 });
 
@@ -239,6 +245,7 @@ export const updateUserGearSchema = z.object({
     z.object({
       itemId: z.string().cuid(),
       enhancementLevel: z.number().int().min(0).max(12).default(0),
+      isRare: z.boolean().default(false),
     })
   ),
 });
@@ -252,6 +259,7 @@ export const userGearResponseSchema = z.object({
 export const updateItemEnhancementSchema = z.object({
   userItemId: z.string().cuid(),
   enhancementLevel: z.number().int().min(0).max(12),
+  isRare: z.boolean().optional(),
 });
 
 // Type exports
@@ -271,4 +279,6 @@ export type UserItem = z.infer<typeof userItemSchema>;
 export type UserItemWithDetails = z.infer<typeof userItemWithDetailsSchema>;
 export type UpdateUserGearInput = z.infer<typeof updateUserGearSchema>;
 export type UserGearResponse = z.infer<typeof userGearResponseSchema>;
-export type UpdateItemEnhancementInput = z.infer<typeof updateItemEnhancementSchema>;
+export type UpdateItemEnhancementInput = z.infer<
+  typeof updateItemEnhancementSchema
+>;

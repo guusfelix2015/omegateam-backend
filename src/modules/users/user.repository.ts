@@ -16,7 +16,7 @@ type UserWithClasse = Omit<User, 'password'> & {
 };
 
 export class UserRepository {
-  constructor(private prisma: PrismaClient) { }
+  constructor(private prisma: PrismaClient) {}
 
   async findMany(query: GetUsersQuery) {
     const { page, limit, search, isActive, role, sortBy, sortOrder } = query;
@@ -318,7 +318,11 @@ export class UserRepository {
 
   async updateUserGear(
     userId: string,
-    items: Array<{ itemId: string; enhancementLevel: number }>,
+    items: Array<{
+      itemId: string;
+      enhancementLevel: number;
+      isRare?: boolean;
+    }>,
     gearScore: number
   ): Promise<void> {
     await this.prisma.$transaction(async tx => {
@@ -327,13 +331,14 @@ export class UserRepository {
         where: { userId },
       });
 
-      // Create new user items with enhancement levels
+      // Create new user items with enhancement levels and rare status
       if (items.length > 0) {
         await tx.userItem.createMany({
           data: items.map(item => ({
             userId,
             itemId: item.itemId,
             enhancementLevel: item.enhancementLevel,
+            isRare: item.isRare ?? false,
           })),
         });
       }
@@ -372,6 +377,7 @@ export class UserRepository {
       id: string;
       itemId: string;
       enhancementLevel: number;
+      isRare: boolean;
       item: {
         id: string;
         name: string;
@@ -409,11 +415,20 @@ export class UserRepository {
 
   async updateItemEnhancement(
     userItemId: string,
-    enhancementLevel: number
+    enhancementLevel: number,
+    isRare?: boolean
   ): Promise<void> {
+    const updateData: { enhancementLevel: number; isRare?: boolean } = {
+      enhancementLevel,
+    };
+
+    if (isRare !== undefined) {
+      updateData.isRare = isRare;
+    }
+
     await this.prisma.userItem.update({
       where: { id: userItemId },
-      data: { enhancementLevel },
+      data: updateData,
     });
   }
 

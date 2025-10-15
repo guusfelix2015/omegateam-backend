@@ -140,6 +140,7 @@ model UserItem {
   userId           String   @map("user_id")
   itemId           String   @map("item_id")
   enhancementLevel Int      @default(0) @map("enhancement_level") // 0-12
+  isRare           Boolean  @default(false) @map("is_rare") // Rare items get +10 GS bonus
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 

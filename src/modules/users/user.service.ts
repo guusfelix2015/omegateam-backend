@@ -9,6 +9,7 @@ import type {
   UpdateUserGearInput,
   UserGearResponse,
   UpdateItemEnhancementInput,
+  ItemGrade,
 } from '@/routes/users/users.schema.ts';
 import { UserRepository } from './user.repository.ts';
 import { CompanyPartyRepository } from '@/modules/company-parties/company-party.repository.ts';
@@ -55,9 +56,9 @@ export class UserService {
         updatedAt: user.updatedAt.toISOString(),
         classe: user.classe
           ? {
-            ...user.classe,
-            createdAt: user.classe.createdAt.toISOString(),
-          }
+              ...user.classe,
+              createdAt: user.classe.createdAt.toISOString(),
+            }
           : null,
       })),
       pagination: {
@@ -99,9 +100,9 @@ export class UserService {
       updatedAt: user.updatedAt.toISOString(),
       classe: user.classe
         ? {
-          ...user.classe,
-          createdAt: user.classe.createdAt.toISOString(),
-        }
+            ...user.classe,
+            createdAt: user.classe.createdAt.toISOString(),
+          }
         : null,
       companyParties,
     };
@@ -174,9 +175,9 @@ export class UserService {
       updatedAt: user.updatedAt.toISOString(),
       classe: user.classe
         ? {
-          ...user.classe,
-          createdAt: user.classe.createdAt.toISOString(),
-        }
+            ...user.classe,
+            createdAt: user.classe.createdAt.toISOString(),
+          }
         : null,
     };
   }
@@ -209,13 +210,14 @@ export class UserService {
       classeId: user.classeId,
       ownedItemIds: user.ownedItemIds,
       gearScore: user.gearScore,
+      dkpPoints: user.dkpPoints,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
       classe: user.classe
         ? {
-          ...user.classe,
-          createdAt: user.classe.createdAt.toISOString(),
-        }
+            ...user.classe,
+            createdAt: user.classe.createdAt.toISOString(),
+          }
         : null,
     };
   }
@@ -243,9 +245,9 @@ export class UserService {
       updatedAt: user.updatedAt.toISOString(),
       classe: user.classe
         ? {
-          ...user.classe,
-          createdAt: user.classe.createdAt.toISOString(),
-        }
+            ...user.classe,
+            createdAt: user.classe.createdAt.toISOString(),
+          }
         : null,
     };
   }
@@ -273,11 +275,12 @@ export class UserService {
         id: userItem.id,
         itemId: userItem.itemId,
         enhancementLevel: userItem.enhancementLevel,
+        isRare: userItem.isRare,
         item: {
           id: userItem.item.id,
           name: userItem.item.name,
-          category: userItem.item.category,
-          grade: userItem.item.grade,
+          category: userItem.item.category as ItemCategory,
+          grade: userItem.item.grade as ItemGrade,
           valorGsInt: userItem.item.valorGsInt,
           valorDkp: userItem.item.valorDkp,
           createdAt: userItem.item.createdAt.toISOString(),
@@ -309,14 +312,14 @@ export class UserService {
     items.forEach(({ itemId }) => {
       const item = itemMap.get(itemId);
       if (item) {
-        const count = categoryCounts.get(item.category) || 0;
+        const count = categoryCounts.get(item.category) ?? 0;
         categoryCounts.set(item.category, count + 1);
       }
     });
 
     // Check limits
     for (const [category, count] of categoryCounts.entries()) {
-      const limit = CATEGORY_LIMITS[category] || 1;
+      const limit = CATEGORY_LIMITS[category] ?? 1;
       if (count > limit) {
         const categoryName = this.getCategoryDisplayName(category);
         throw new ValidationError(
@@ -343,7 +346,7 @@ export class UserService {
       WEAPON: 'arma',
       COMUM: 'item comum',
     };
-    return names[category] || category.toLowerCase();
+    return names[category] ?? category.toLowerCase();
   }
 
   async updateUserGear(
@@ -370,14 +373,15 @@ export class UserService {
     const items = await this.itemRepository.findByIds(uniqueItemIds);
     const itemMap = new Map(items.map(item => [item.id, item]));
 
-    // Calculate total gear score with enhancements
+    // Calculate total gear score with enhancements and rare bonuses
     const gearScore = data.items.reduce((total, userItem) => {
       const item = itemMap.get(userItem.itemId);
       if (!item) return total;
 
       const itemGS = this.enhancementService.calculateTotalItemGS(
         item.valorGsInt,
-        userItem.enhancementLevel
+        userItem.enhancementLevel,
+        userItem.isRare ?? false
       );
       return total + itemGS;
     }, 0);
@@ -399,10 +403,11 @@ export class UserService {
       throw new NotFoundError('User');
     }
 
-    // Update the enhancement level
+    // Update the enhancement level and rare status
     await this.userRepository.updateItemEnhancement(
       data.userItemId,
-      data.enhancementLevel
+      data.enhancementLevel,
+      data.isRare
     );
 
     // Recalculate and update gear score
@@ -411,11 +416,12 @@ export class UserService {
       throw new NotFoundError('User gear');
     }
 
-    // Calculate new total gear score
+    // Calculate new total gear score with rare bonuses
     const gearScore = gearData.userItems.reduce((total, userItem) => {
       const itemGS = this.enhancementService.calculateTotalItemGS(
         userItem.item.valorGsInt,
-        userItem.enhancementLevel
+        userItem.enhancementLevel,
+        userItem.isRare
       );
       return total + itemGS;
     }, 0);
