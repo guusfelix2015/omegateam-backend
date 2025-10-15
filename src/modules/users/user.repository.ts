@@ -316,49 +316,34 @@ export class UserRepository {
     };
   }
 
-  async updateUserGear(id: string, ownedItemIds: string[], gearScore: number): Promise<UserWithClasse> {
-    try {
-      const user = await this.prisma.user.update({
-        where: { id },
-        data: {
-          ownedItemIds,
-          gearScore,
-        },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          nickname: true,
-          avatar: true,
-          isActive: true,
-          lvl: true,
-          role: true,
-          classeId: true,
-          ownedItemIds: true,
-          gearScore: true,
-          dkpPoints: true,
-          bagUrl: true,
-          createdAt: true,
-          updatedAt: true,
-          classe: {
-            select: {
-              id: true,
-              name: true,
-              createdAt: true,
-            },
-          },
-        },
+  async updateUserGear(
+    userId: string,
+    items: Array<{ itemId: string; enhancementLevel: number }>,
+    gearScore: number
+  ): Promise<void> {
+    await this.prisma.$transaction(async tx => {
+      // Delete existing user items
+      await tx.userItem.deleteMany({
+        where: { userId },
       });
 
-      return user;
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2025') {
-          throw new NotFoundError('User');
-        }
+      // Create new user items with enhancement levels
+      if (items.length > 0) {
+        await tx.userItem.createMany({
+          data: items.map(item => ({
+            userId,
+            itemId: item.itemId,
+            enhancementLevel: item.enhancementLevel,
+          })),
+        });
       }
-      throw error;
-    }
+
+      // Update user gear score
+      await tx.user.update({
+        where: { id: userId },
+        data: { gearScore },
+      });
+    });
   }
 
   async updateUserDkpBalance(id: string, amount: number): Promise<void> {
@@ -381,16 +366,62 @@ export class UserRepository {
     }
   }
 
-  async getUserGear(id: string): Promise<{ ownedItemIds: string[]; gearScore: number } | null> {
+  async getUserGear(userId: string): Promise<{
+    gearScore: number;
+    userItems: Array<{
+      id: string;
+      itemId: string;
+      enhancementLevel: number;
+      item: {
+        id: string;
+        name: string;
+        category: string;
+        grade: string;
+        valorGsInt: number;
+        valorDkp: number;
+        createdAt: Date;
+        updatedAt: Date;
+      };
+    }>;
+  } | null> {
     const user = await this.prisma.user.findUnique({
-      where: { id },
+      where: { id: userId },
       select: {
-        ownedItemIds: true,
         gearScore: true,
+        userItems: {
+          include: {
+            item: true,
+          },
+          orderBy: {
+            createdAt: 'asc',
+          },
+        },
       },
     });
 
-    return user;
+    if (!user) return null;
+
+    return {
+      gearScore: user.gearScore,
+      userItems: user.userItems,
+    };
+  }
+
+  async updateItemEnhancement(
+    userItemId: string,
+    enhancementLevel: number
+  ): Promise<void> {
+    await this.prisma.userItem.update({
+      where: { id: userItemId },
+      data: { enhancementLevel },
+    });
+  }
+
+  async updateGearScore(userId: string, gearScore: number): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { gearScore },
+    });
   }
 
   async findByIdWithCompanyParties(id: string) {

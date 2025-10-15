@@ -76,6 +76,7 @@ model User {
   createdAuctions     Auction[]          @relation("AuctionCreator")
   bids                Bid[]              @relation("BidUser")
   wonAuctionItems     AuctionItem[]      @relation("AuctionWinner")
+  userItems           UserItem[]
 
   @@map("users")
 }
@@ -128,7 +129,28 @@ model Item {
   createdAt   DateTime     @default(now()) @map("created_at")
   updatedAt   DateTime     @updatedAt @map("updated_at")
 
+  // Relations
+  userItems   UserItem[]
+
   @@map("items")
+}
+
+model UserItem {
+  id               String   @id @default(cuid())
+  userId           String   @map("user_id")
+  itemId           String   @map("item_id")
+  enhancementLevel Int      @default(0) @map("enhancement_level") // 0-12
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item             Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  // Indexes
+  @@index([userId])
+  @@index([itemId])
+  @@map("user_items")
 }
 
 enum DkpTransactionType {

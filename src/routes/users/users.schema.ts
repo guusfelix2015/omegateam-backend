@@ -186,24 +186,72 @@ export const errorResponseSchema = z.object({
   }),
 });
 
+// Item category and grade enums
+export const itemCategorySchema = z.enum([
+  'HELMET',
+  'ARMOR',
+  'PANTS',
+  'BOOTS',
+  'GLOVES',
+  'NECKLACE',
+  'EARRING',
+  'RING',
+  'SHIELD',
+  'WEAPON',
+  'COMUM',
+]);
+
+export const itemGradeSchema = z.enum(['D', 'C', 'B', 'A', 'S']);
+
+// Item schema
+export const itemSchema = z.object({
+  id: z.string().cuid(),
+  name: z.string(),
+  category: itemCategorySchema,
+  grade: itemGradeSchema,
+  valorGsInt: z.number().int(),
+  valorDkp: z.number().int(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+
+// UserItem schema
+export const userItemSchema = z.object({
+  id: z.string().cuid(),
+  userId: z.string().cuid(),
+  itemId: z.string().cuid(),
+  enhancementLevel: z.number().int().min(0).max(12),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+
+// UserItem with item details
+export const userItemWithDetailsSchema = z.object({
+  id: z.string().cuid(),
+  itemId: z.string().cuid(),
+  enhancementLevel: z.number().int().min(0).max(12),
+  item: itemSchema,
+});
+
 // Gear Score schemas
 export const updateUserGearSchema = z.object({
-  ownedItemIds: z.array(z.string().cuid()).min(0, 'Invalid item IDs'),
+  items: z.array(
+    z.object({
+      itemId: z.string().cuid(),
+      enhancementLevel: z.number().int().min(0).max(12).default(0),
+    })
+  ),
 });
 
 export const userGearResponseSchema = z.object({
-  ownedItemIds: z.array(z.string().cuid()),
   gearScore: z.number().int().min(0),
-  ownedItems: z.array(z.object({
-    id: z.string().cuid(),
-    name: z.string(),
-    category: z.enum(['HELMET', 'ARMOR', 'PANTS', 'BOOTS', 'GLOVES', 'NECKLACE', 'EARRING', 'RING', 'SHIELD', 'WEAPON']),
-    grade: z.enum(['D', 'C', 'B', 'A', 'S']),
-    valorGsInt: z.number().int(),
-    valorDkp: z.number().int(),
-    createdAt: z.string().datetime(),
-    updatedAt: z.string().datetime(),
-  })),
+  userItems: z.array(userItemWithDetailsSchema),
+});
+
+// Update item enhancement schema
+export const updateItemEnhancementSchema = z.object({
+  userItemId: z.string().cuid(),
+  enhancementLevel: z.number().int().min(0).max(12),
 });
 
 // Type exports
@@ -216,5 +264,11 @@ export type GetUsersQuery = z.infer<typeof getUsersQuerySchema>;
 export type UserParams = z.infer<typeof userParamsSchema>;
 export type UserResponse = z.infer<typeof userResponseSchema>;
 export type UsersListResponse = z.infer<typeof usersListResponseSchema>;
+export type ItemCategory = z.infer<typeof itemCategorySchema>;
+export type ItemGrade = z.infer<typeof itemGradeSchema>;
+export type Item = z.infer<typeof itemSchema>;
+export type UserItem = z.infer<typeof userItemSchema>;
+export type UserItemWithDetails = z.infer<typeof userItemWithDetailsSchema>;
 export type UpdateUserGearInput = z.infer<typeof updateUserGearSchema>;
 export type UserGearResponse = z.infer<typeof userGearResponseSchema>;
+export type UpdateItemEnhancementInput = z.infer<typeof updateItemEnhancementSchema>;

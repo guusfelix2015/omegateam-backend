@@ -8,12 +8,14 @@ import type {
   UsersListResponse,
   UpdateUserGearInput,
   UserGearResponse,
+  UpdateItemEnhancementInput,
 } from '@/routes/users/users.schema.ts';
 import { UserRepository } from './user.repository.ts';
 import { CompanyPartyRepository } from '@/modules/company-parties/company-party.repository.ts';
 import { ItemRepository } from '@/modules/items/item.repository.ts';
 import { NotFoundError, ValidationError } from '@/libs/errors.ts';
 import { PasswordUtils } from '@/libs/password.ts';
+import { EnhancementCalculationService } from '@/modules/items/enhancement-calculation.service.ts';
 
 // Category limits for gear items
 const CATEGORY_LIMITS: Record<string, number> = {
@@ -34,11 +36,13 @@ export class UserService {
   private userRepository: UserRepository;
   private companyPartyRepository: CompanyPartyRepository;
   private itemRepository: ItemRepository;
+  private enhancementService: EnhancementCalculationService;
 
   constructor(prisma: PrismaClient) {
     this.userRepository = new UserRepository(prisma);
     this.companyPartyRepository = new CompanyPartyRepository(prisma);
     this.itemRepository = new ItemRepository(prisma);
+    this.enhancementService = new EnhancementCalculationService();
   }
 
   async getUsers(query: GetUsersQuery): Promise<UsersListResponse> {
@@ -51,9 +55,9 @@ export class UserService {
         updatedAt: user.updatedAt.toISOString(),
         classe: user.classe
           ? {
-              ...user.classe,
-              createdAt: user.classe.createdAt.toISOString(),
-            }
+            ...user.classe,
+            createdAt: user.classe.createdAt.toISOString(),
+          }
           : null,
       })),
       pagination: {
@@ -95,9 +99,9 @@ export class UserService {
       updatedAt: user.updatedAt.toISOString(),
       classe: user.classe
         ? {
-            ...user.classe,
-            createdAt: user.classe.createdAt.toISOString(),
-          }
+          ...user.classe,
+          createdAt: user.classe.createdAt.toISOString(),
+        }
         : null,
       companyParties,
     };
@@ -170,9 +174,9 @@ export class UserService {
       updatedAt: user.updatedAt.toISOString(),
       classe: user.classe
         ? {
-            ...user.classe,
-            createdAt: user.classe.createdAt.toISOString(),
-          }
+          ...user.classe,
+          createdAt: user.classe.createdAt.toISOString(),
+        }
         : null,
     };
   }
@@ -209,9 +213,9 @@ export class UserService {
       updatedAt: user.updatedAt.toISOString(),
       classe: user.classe
         ? {
-            ...user.classe,
-            createdAt: user.classe.createdAt.toISOString(),
-          }
+          ...user.classe,
+          createdAt: user.classe.createdAt.toISOString(),
+        }
         : null,
     };
   }
@@ -239,9 +243,9 @@ export class UserService {
       updatedAt: user.updatedAt.toISOString(),
       classe: user.classe
         ? {
-            ...user.classe,
-            createdAt: user.classe.createdAt.toISOString(),
-          }
+          ...user.classe,
+          createdAt: user.classe.createdAt.toISOString(),
+        }
         : null,
     };
   }
@@ -258,29 +262,27 @@ export class UserService {
   }
 
   async getUserGear(id: string): Promise<UserGearResponse> {
-    const user = await this.userRepository.getUserGear(id);
-    if (!user) {
+    const gearData = await this.userRepository.getUserGear(id);
+    if (!gearData) {
       throw new NotFoundError('User');
     }
 
-    // Get unique item IDs
-    const uniqueItemIds = Array.from(new Set(user.ownedItemIds));
-
-    // Get the actual item details
-    const ownedItems = await this.itemRepository.findByIds(uniqueItemIds);
-
     return {
-      ownedItemIds: user.ownedItemIds,
-      gearScore: user.gearScore,
-      ownedItems: ownedItems.map(item => ({
-        id: item.id,
-        name: item.name,
-        category: item.category,
-        grade: item.grade,
-        valorGsInt: item.valorGsInt,
-        valorDkp: item.valorDkp,
-        createdAt: item.createdAt.toISOString(),
-        updatedAt: item.updatedAt.toISOString(),
+      gearScore: gearData.gearScore,
+      userItems: gearData.userItems.map(userItem => ({
+        id: userItem.id,
+        itemId: userItem.itemId,
+        enhancementLevel: userItem.enhancementLevel,
+        item: {
+          id: userItem.item.id,
+          name: userItem.item.name,
+          category: userItem.item.category,
+          grade: userItem.item.grade,
+          valorGsInt: userItem.item.valorGsInt,
+          valorDkp: userItem.item.valorDkp,
+          createdAt: userItem.item.createdAt.toISOString(),
+          updatedAt: userItem.item.updatedAt.toISOString(),
+        },
       })),
     };
   }
@@ -288,22 +290,24 @@ export class UserService {
   /**
    * Validate that the gear configuration respects category limits
    */
-  private async validateGearLimits(itemIds: string[]): Promise<void> {
-    if (itemIds.length === 0) {
+  private async validateGearLimits(
+    items: Array<{ itemId: string; enhancementLevel: number }>
+  ): Promise<void> {
+    if (items.length === 0) {
       return;
     }
 
     // Get unique item IDs and fetch items
-    const uniqueIds = Array.from(new Set(itemIds));
-    const items = await this.itemRepository.findByIds(uniqueIds);
+    const uniqueIds = Array.from(new Set(items.map(i => i.itemId)));
+    const itemsData = await this.itemRepository.findByIds(uniqueIds);
 
     // Create a map of id -> item for quick lookup
-    const itemMap = new Map(items.map(item => [item.id, item]));
+    const itemMap = new Map(itemsData.map(item => [item.id, item]));
 
     // Count items by category
     const categoryCounts = new Map<string, number>();
-    itemIds.forEach(id => {
-      const item = itemMap.get(id);
+    items.forEach(({ itemId }) => {
+      const item = itemMap.get(itemId);
       if (item) {
         const count = categoryCounts.get(item.category) || 0;
         categoryCounts.set(item.category, count + 1);
@@ -353,35 +357,74 @@ export class UserService {
     }
 
     // Validate that all unique item IDs exist
-    const uniqueItemIds = Array.from(new Set(data.ownedItemIds));
+    const uniqueItemIds = Array.from(new Set(data.items.map(i => i.itemId)));
     const itemsExist = await this.itemRepository.validateItemIds(uniqueItemIds);
     if (!itemsExist) {
       throw new ValidationError('One or more item IDs are invalid');
     }
 
     // Validate category limits
-    await this.validateGearLimits(data.ownedItemIds);
+    await this.validateGearLimits(data.items);
 
-    // Count occurrences of each item ID
-    const itemCounts = new Map<string, number>();
-    data.ownedItemIds.forEach(id => {
-      itemCounts.set(id, (itemCounts.get(id) || 0) + 1);
-    });
-
-    // Fetch unique items
+    // Fetch items
     const items = await this.itemRepository.findByIds(uniqueItemIds);
+    const itemMap = new Map(items.map(item => [item.id, item]));
 
-    // Calculate gear score with quantities
-    const gearScore = items.reduce((total, item) => {
-      const quantity = itemCounts.get(item.id) || 1;
-      return total + item.valorGsInt * quantity;
+    // Calculate total gear score with enhancements
+    const gearScore = data.items.reduce((total, userItem) => {
+      const item = itemMap.get(userItem.itemId);
+      if (!item) return total;
+
+      const itemGS = this.enhancementService.calculateTotalItemGS(
+        item.valorGsInt,
+        userItem.enhancementLevel
+      );
+      return total + itemGS;
     }, 0);
 
-    // Update user gear
-    await this.userRepository.updateUserGear(id, data.ownedItemIds, gearScore);
+    // Update user items and gear score
+    await this.userRepository.updateUserGear(id, data.items, gearScore);
 
     // Return updated gear info
     return this.getUserGear(id);
+  }
+
+  async updateItemEnhancement(
+    userId: string,
+    data: UpdateItemEnhancementInput
+  ): Promise<UserGearResponse> {
+    // Check if user exists
+    const userExists = await this.userRepository.exists(userId);
+    if (!userExists) {
+      throw new NotFoundError('User');
+    }
+
+    // Update the enhancement level
+    await this.userRepository.updateItemEnhancement(
+      data.userItemId,
+      data.enhancementLevel
+    );
+
+    // Recalculate and update gear score
+    const gearData = await this.userRepository.getUserGear(userId);
+    if (!gearData) {
+      throw new NotFoundError('User gear');
+    }
+
+    // Calculate new total gear score
+    const gearScore = gearData.userItems.reduce((total, userItem) => {
+      const itemGS = this.enhancementService.calculateTotalItemGS(
+        userItem.item.valorGsInt,
+        userItem.enhancementLevel
+      );
+      return total + itemGS;
+    }, 0);
+
+    // Update gear score
+    await this.userRepository.updateGearScore(userId, gearScore);
+
+    // Return updated gear info
+    return this.getUserGear(userId);
   }
 
   async getCPMembers(userId: string) {

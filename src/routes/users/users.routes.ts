@@ -9,6 +9,7 @@ import type {
   GetUsersQuery,
   UserParams,
   UpdateUserGearInput,
+  UpdateItemEnhancementInput,
 } from './users.schema.ts';
 import { getUsersQuerySchema } from './users.schema.ts';
 
@@ -125,6 +126,17 @@ const usersRoutes: FastifyPluginAsync = async fastify => {
       return usersController.updateUserGear(request, reply);
     },
   });
+
+  // PATCH /users/profile/gear/enhancement - Update single item enhancement
+  fastify.patch<{ Body: UpdateItemEnhancementInput }>(
+    '/profile/gear/enhancement',
+    {
+      preValidation: [fastify.authenticate],
+      handler: async (request, reply) => {
+        return usersController.updateItemEnhancement(request, reply);
+      },
+    }
+  );
 
   // GET /users/:id/gear - Get specific user's gear (authenticated users)
   fastify.get<{ Params: UserParams }>('/:id/gear', {

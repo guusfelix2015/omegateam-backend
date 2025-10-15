@@ -6,6 +6,7 @@ import type {
   GetUsersQuery,
   UserParams,
   UpdateUserGearInput,
+  UpdateItemEnhancementInput,
 } from './users.schema.ts';
 import { UserService } from '@/modules/users/user.service.ts';
 
@@ -147,6 +148,28 @@ export class UsersController {
     reply: FastifyReply
   ) {
     const gear = await this.userService.getUserGear(request.params.id);
+
+    return reply.status(200).send(gear);
+  }
+
+  async updateItemEnhancement(
+    request: FastifyRequest<{ Body: UpdateItemEnhancementInput }>,
+    reply: FastifyReply
+  ) {
+    if (!request.user) {
+      return reply.status(401).send({
+        error: {
+          message: 'Unauthorized',
+          statusCode: 401,
+        },
+      });
+    }
+
+    const userId = request.user.id;
+    const gear = await this.userService.updateItemEnhancement(
+      userId,
+      request.body
+    );
 
     return reply.status(200).send(gear);
   }
