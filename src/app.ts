@@ -3,6 +3,7 @@ import type { FastifyInstance } from 'fastify';
 import { env, isDev } from '@/libs/env.ts';
 import { errorHandler } from '@/libs/errors.ts';
 import { authenticate, requireAdmin, requirePlayer } from '@/libs/auth.ts';
+import multipart from '@fastify/multipart';
 
 // Plugins
 import prismaPlugin from '@/plugins/prisma.ts';
@@ -21,6 +22,7 @@ import raidInstancesRoutes from '@/routes/raid-instances/raid-instances.routes.t
 import raidDroppedItemsRoutes from '@/routes/raid-dropped-items/raid-dropped-items.routes.ts';
 import dkpRoutes from '@/routes/dkp/dkp.routes.ts';
 import auctionsRoutes from '@/routes/auctions/auctions.routes.ts';
+import uploadRoutes from '@/routes/upload/upload.routes.ts';
 
 export async function createApp(): Promise<FastifyInstance> {
   const app = Fastify({
@@ -48,6 +50,13 @@ export async function createApp(): Promise<FastifyInstance> {
   await app.register(prismaPlugin);
   await app.register(securityPlugin);
 
+  // Register multipart for file uploads
+  await app.register(multipart, {
+    limits: {
+      fileSize: 20 * 1024 * 1024, // 20MB max file size
+    },
+  });
+
   // Decorate with auth middleware
   app.decorate('authenticate', authenticate);
   app.decorate('requireAdmin', requireAdmin);
@@ -65,6 +74,7 @@ export async function createApp(): Promise<FastifyInstance> {
   await app.register(raidDroppedItemsRoutes, { prefix: '/raid-dropped-items' });
   await app.register(dkpRoutes, { prefix: '/dkp' });
   await app.register(auctionsRoutes, { prefix: '/auctions' });
+  await app.register(uploadRoutes, { prefix: '/upload' });
 
   // 404 handler
   app.setNotFoundHandler(async (request, reply) => {

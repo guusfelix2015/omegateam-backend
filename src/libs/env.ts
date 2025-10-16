@@ -30,6 +30,14 @@ const envSchema = z.object({
   LOG_LEVEL: z
     .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace'])
     .default('info'),
+
+  // Contabo Object Storage (S3-compatible)
+  CONTABO_ACCESS_KEY_ID: z.string().min(1),
+  CONTABO_SECRET_ACCESS_KEY: z.string().min(1),
+  CONTABO_BUCKET_NAME: z.string().min(1).default('lineage-cp-omega'),
+  CONTABO_REGION: z.string().default('us-central-1'),
+  CONTABO_ENDPOINT: z.string().url().default('https://usc1.contabostorage.com'),
+  CONTABO_PUBLIC_URL: z.string().url(),
 });
 
 export type Env = z.infer<typeof envSchema>;
