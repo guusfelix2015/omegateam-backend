@@ -119,6 +119,10 @@ jobs:
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
           POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          # Contabo Object Storage (Optional)
+          CONTABO_ACCESS_KEY_ID: ${{ secrets.CONTABO_ACCESS_KEY_ID }}
+          CONTABO_SECRET_ACCESS_KEY: ${{ secrets.CONTABO_SECRET_ACCESS_KEY }}
+          CONTABO_PUBLIC_URL: ${{ secrets.CONTABO_PUBLIC_URL }}
           # Optional Environment Variables
           LOG_LEVEL: ${{ secrets.LOG_LEVEL || 'info' }}
           RATE_LIMIT_MAX: ${{ secrets.RATE_LIMIT_MAX || '100' }}
@@ -176,6 +180,9 @@ jobs:
             export POSTGRES_DB="${{ env.POSTGRES_DB }}"
             export POSTGRES_USER="${{ env.POSTGRES_USER }}"
             export POSTGRES_PASSWORD="${{ env.POSTGRES_PASSWORD }}"
+            export CONTABO_ACCESS_KEY_ID="${{ env.CONTABO_ACCESS_KEY_ID }}"
+            export CONTABO_SECRET_ACCESS_KEY="${{ env.CONTABO_SECRET_ACCESS_KEY }}"
+            export CONTABO_PUBLIC_URL="${{ env.CONTABO_PUBLIC_URL }}"
             export LOG_LEVEL="${{ env.LOG_LEVEL }}"
             export RATE_LIMIT_MAX="${{ env.RATE_LIMIT_MAX }}"
             export RATE_LIMIT_WINDOW="${{ env.RATE_LIMIT_WINDOW }}"

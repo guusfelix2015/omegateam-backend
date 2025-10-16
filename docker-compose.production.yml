@@ -43,6 +43,13 @@ services:
       LOG_LEVEL: ${LOG_LEVEL}
       RATE_LIMIT_MAX: ${RATE_LIMIT_MAX}
       RATE_LIMIT_WINDOW: ${RATE_LIMIT_WINDOW}
+      # Contabo Object Storage (Optional)
+      CONTABO_ACCESS_KEY_ID: ${CONTABO_ACCESS_KEY_ID}
+      CONTABO_SECRET_ACCESS_KEY: ${CONTABO_SECRET_ACCESS_KEY}
+      CONTABO_BUCKET_NAME: ${CONTABO_BUCKET_NAME:-lineage-cp-omega}
+      CONTABO_REGION: ${CONTABO_REGION:-us-central-1}
+      CONTABO_ENDPOINT: ${CONTABO_ENDPOINT:-https://usc1.contabostorage.com}
+      CONTABO_PUBLIC_URL: ${CONTABO_PUBLIC_URL}
     expose:
       - '3000'
     depends_on:
