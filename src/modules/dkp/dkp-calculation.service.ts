@@ -3,28 +3,65 @@
  *
  * Handles the core DKP calculation logic based on the formula:
  * DKP = (Boss Level × Gear Score) ÷ 100
+ *
+ * Support classes receive a 15% bonus on DKP calculations.
  */
 export class DkpCalculationService {
+  // Support classes that receive 15% DKP bonus
+  private static readonly SUPPORT_CLASSES = [
+    'Bishop',
+    'Elven Elder',
+    'Shillen Elder',
+    'Overlord',
+    'Warcryer',
+    'Prophet',
+  ];
+
+  // Class bonus multiplier (15% = 1.15)
+  private static readonly CLASS_BONUS_MULTIPLIER = 1.15;
+
+  /**
+   * Check if a class name is a support class that receives DKP bonus
+   *
+   * @param className - The name of the player's class
+   * @returns True if the class receives bonus, false otherwise
+   */
+  private isSupportClass(className: string | null | undefined): boolean {
+    if (!className) return false;
+    return DkpCalculationService.SUPPORT_CLASSES.includes(className);
+  }
+
   /**
    * Calculate DKP points for a participant based on raid and gear score
    *
    * @param bossLevel - The level of the raid boss
    * @param gearScore - The participant's gear score at time of raid
-   * @returns Calculated DKP points (rounded to integer)
+   * @param className - Optional class name to apply support class bonus
+   * @returns Object with calculated DKP points and whether bonus was applied
    */
   calculateDkpForParticipant(
     bossLevel: number,
-    gearScore: number
-  ): number {
+    gearScore: number,
+    className?: string | null
+  ): { dkpPoints: number; classBonusApplied: boolean } {
     if (bossLevel <= 0 || gearScore < 0) {
       throw new Error('Invalid parameters for DKP calculation');
     }
 
     // Formula: DKP = (Boss Level × Gear Score) ÷ 100
-    const dkpPoints = (bossLevel * gearScore) / 100;
+    let dkpPoints = (bossLevel * gearScore) / 100;
+
+    // Apply class bonus if applicable
+    const classBonusApplied = this.isSupportClass(className);
+    if (classBonusApplied) {
+      dkpPoints *= DkpCalculationService.CLASS_BONUS_MULTIPLIER;
+    }
 
     // Round to nearest integer
-    return Math.round(dkpPoints);
+    return {
+      dkpPoints: Math.round(dkpPoints),
+      classBonusApplied,
+    };
   }
 
   /**
@@ -92,12 +129,17 @@ export class DkpCalculationService {
    * Get DKP calculation preview without actually awarding points
    *
    * @param bossLevel - The level of the raid boss
-   * @param participants - Array of participants with their gear scores
+   * @param participants - Array of participants with their gear scores and class names
    * @returns Preview of DKP calculations
    */
   previewDkpCalculation(
     bossLevel: number,
-    participants: Array<{ userId: string; name: string; gearScore: number }>
+    participants: Array<{
+      userId: string;
+      name: string;
+      gearScore: number;
+      className?: string | null;
+    }>
   ): {
     totalDkpToAward: number;
     averageDkpPerParticipant: number;
@@ -106,15 +148,21 @@ export class DkpCalculationService {
       name: string;
       gearScore: number;
       dkpAwarded: number;
+      classBonusApplied: boolean;
     }>;
   } {
-    const calculatedParticipants = participants.map(participant => ({
-      ...participant,
-      dkpAwarded: this.calculateDkpForParticipant(
+    const calculatedParticipants = participants.map(participant => {
+      const result = this.calculateDkpForParticipant(
         bossLevel,
-        participant.gearScore
-      ),
-    }));
+        participant.gearScore,
+        participant.className
+      );
+      return {
+        ...participant,
+        dkpAwarded: result.dkpPoints,
+        classBonusApplied: result.classBonusApplied,
+      };
+    });
 
     const totalDkpToAward = calculatedParticipants.reduce(
       (sum, p) => sum + p.dkpAwarded,

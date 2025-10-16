@@ -35,6 +35,7 @@ export class DkpService {
       reason: transaction.reason,
       createdBy: transaction.createdBy,
       raidInstanceId: transaction.raidInstanceId,
+      classBonusApplied: transaction.classBonusApplied,
       createdAt: transaction.createdAt.toISOString(),
       user: transaction.user,
       createdByUser: transaction.createdByUser,

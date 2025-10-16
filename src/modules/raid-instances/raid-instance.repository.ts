@@ -13,6 +13,7 @@ export interface CreateRaidParticipantData {
   userId: string;
   gearScoreAtTime: number;
   dkpAwarded: number;
+  classBonusApplied?: boolean;
 }
 
 export interface GetRaidInstancesOptions {

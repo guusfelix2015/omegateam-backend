@@ -3,7 +3,7 @@ import { z } from 'zod';
 // DKP Transaction Type enum
 export const dkpTransactionTypeSchema = z.enum([
   'RAID_REWARD',
-  'MANUAL_ADJUSTMENT', 
+  'MANUAL_ADJUSTMENT',
   'ITEM_PURCHASE',
 ]);
 
@@ -16,6 +16,7 @@ export const dkpTransactionSchema = z.object({
   reason: z.string().min(1),
   createdBy: z.string().cuid(),
   raidInstanceId: z.string().cuid().nullable(),
+  classBonusApplied: z.boolean().default(false),
   createdAt: z.string().datetime(),
 });
 

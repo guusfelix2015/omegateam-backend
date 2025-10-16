@@ -113,9 +113,10 @@ export class RaidInstanceService {
 
       // Calculate DKP for each participant and create participant records
       const participantPromises = participants.map(async (user) => {
-        const dkpAwarded = this.dkpCalculationService.calculateDkpForParticipant(
+        const dkpResult = this.dkpCalculationService.calculateDkpForParticipant(
           raid.bossLevel,
-          user.gearScore
+          user.gearScore,
+          user.classe?.name
         );
 
         // Create participant record
@@ -123,7 +124,8 @@ export class RaidInstanceService {
           raidInstanceId: raidInstance.id,
           userId: user.id,
           gearScoreAtTime: user.gearScore,
-          dkpAwarded,
+          dkpAwarded: dkpResult.dkpPoints,
+          classBonusApplied: dkpResult.classBonusApplied,
         };
 
         await this.raidInstanceRepository.createParticipant(participantData);
@@ -132,15 +134,16 @@ export class RaidInstanceService {
         await this.dkpRepository.createTransaction({
           userId: user.id,
           type: 'RAID_REWARD',
-          amount: dkpAwarded,
+          amount: dkpResult.dkpPoints,
           reason: `Raid completion: ${raid.name}`,
           createdBy: adminId,
           raidInstanceId: raidInstance.id,
+          classBonusApplied: dkpResult.classBonusApplied,
         });
 
         return {
           userId: user.id,
-          dkpAwarded,
+          dkpAwarded: dkpResult.dkpPoints,
         };
       });
 
@@ -206,9 +209,10 @@ export class RaidInstanceService {
 
       // Calculate DKP for each participant and create participant records
       const participantPromises = participants.map(async (user) => {
-        const dkpAwarded = this.dkpCalculationService.calculateDkpForParticipant(
+        const dkpResult = this.dkpCalculationService.calculateDkpForParticipant(
           raid.bossLevel,
-          user.gearScore
+          user.gearScore,
+          user.classe?.name
         );
 
         // Create participant record
@@ -216,7 +220,8 @@ export class RaidInstanceService {
           raidInstanceId: raidInstance.id,
           userId: user.id,
           gearScoreAtTime: user.gearScore,
-          dkpAwarded,
+          dkpAwarded: dkpResult.dkpPoints,
+          classBonusApplied: dkpResult.classBonusApplied,
         };
 
         await this.raidInstanceRepository.createParticipant(participantData);
@@ -225,15 +230,16 @@ export class RaidInstanceService {
         await this.dkpRepository.createTransaction({
           userId: user.id,
           type: 'RAID_REWARD',
-          amount: dkpAwarded,
+          amount: dkpResult.dkpPoints,
           reason: `Raid completion: ${raid.name}`,
           createdBy: adminId,
           raidInstanceId: raidInstance.id,
+          classBonusApplied: dkpResult.classBonusApplied,
         });
 
         return {
           userId: user.id,
-          dkpAwarded,
+          dkpAwarded: dkpResult.dkpPoints,
         };
       });
 
@@ -377,9 +383,10 @@ export class RaidInstanceService {
     }
 
     // Calculate DKP for the participant
-    const dkpAwarded = this.dkpCalculationService.calculateDkpForParticipant(
+    const dkpResult = this.dkpCalculationService.calculateDkpForParticipant(
       raid.bossLevel,
-      user.gearScore
+      user.gearScore,
+      user.classe?.name
     );
 
     // Use transaction to ensure data consistency
@@ -389,7 +396,8 @@ export class RaidInstanceService {
         raidInstanceId,
         userId,
         gearScoreAtTime: user.gearScore,
-        dkpAwarded,
+        dkpAwarded: dkpResult.dkpPoints,
+        classBonusApplied: dkpResult.classBonusApplied,
       };
 
       await this.raidInstanceRepository.createParticipant(participantData);
@@ -398,10 +406,11 @@ export class RaidInstanceService {
       await this.dkpRepository.createTransaction({
         userId,
         type: 'RAID_REWARD',
-        amount: dkpAwarded,
+        amount: dkpResult.dkpPoints,
         reason: `Raid completion: ${raid.name}`,
         createdBy: adminId,
         raidInstanceId,
+        classBonusApplied: dkpResult.classBonusApplied,
       });
 
       return {
@@ -409,7 +418,8 @@ export class RaidInstanceService {
         raidInstanceId,
         userId,
         gearScoreAtTime: user.gearScore,
-        dkpAwarded,
+        dkpAwarded: dkpResult.dkpPoints,
+        classBonusApplied: dkpResult.classBonusApplied,
         createdAt: new Date().toISOString(),
         user: {
           id: user.id,
@@ -488,6 +498,7 @@ export class RaidInstanceService {
           userId: user.id,
           name: user.name,
           gearScore: user.gearScore,
+          className: user.classe?.name,
         };
       })
     );

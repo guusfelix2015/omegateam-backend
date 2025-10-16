@@ -236,12 +236,13 @@ model RaidDroppedItem {
 }
 
 model RaidParticipant {
-  id              String   @id @default(cuid())
-  raidInstanceId  String   @map("raid_instance_id")
-  userId          String   @map("user_id")
-  gearScoreAtTime Int      @map("gear_score_at_time") // GS when raid was completed
-  dkpAwarded      Int      @map("dkp_awarded") // Calculated DKP for this participant
-  createdAt       DateTime @default(now()) @map("created_at")
+  id                 String   @id @default(cuid())
+  raidInstanceId     String   @map("raid_instance_id")
+  userId             String   @map("user_id")
+  gearScoreAtTime    Int      @map("gear_score_at_time") // GS when raid was completed
+  dkpAwarded         Int      @map("dkp_awarded") // Calculated DKP for this participant
+  classBonusApplied  Boolean  @default(false) @map("class_bonus_applied") // Whether 15% support class bonus was applied
+  createdAt          DateTime @default(now()) @map("created_at")
 
   // Relations
   raidInstance    RaidInstance @relation(fields: [raidInstanceId], references: [id], onDelete: Cascade)
@@ -252,15 +253,16 @@ model RaidParticipant {
 }
 
 model DkpTransaction {
-  id              String             @id @default(cuid())
-  userId          String             @map("user_id")
-  type            DkpTransactionType
-  amount          Int                // Positive for credits, negative for debits
-  reason          String             // Required description
-  createdBy       String             @map("created_by") // Admin who created the transaction
-  raidInstanceId  String?            @map("raid_instance_id") // For raid rewards
-  auctionItemId   String?            @map("auction_item_id") // For auction purchases
-  createdAt       DateTime           @default(now()) @map("created_at")
+  id                 String             @id @default(cuid())
+  userId             String             @map("user_id")
+  type               DkpTransactionType
+  amount             Int                // Positive for credits, negative for debits
+  reason             String             // Required description
+  createdBy          String             @map("created_by") // Admin who created the transaction
+  raidInstanceId     String?            @map("raid_instance_id") // For raid rewards
+  auctionItemId      String?            @map("auction_item_id") // For auction purchases
+  classBonusApplied  Boolean            @default(false) @map("class_bonus_applied") // Whether 15% support class bonus was applied
+  createdAt          DateTime           @default(now()) @map("created_at")
 
   // Relations
   user            User @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -125,6 +125,7 @@ export const raidParticipantSchema = z.object({
   userId: z.string().cuid(),
   gearScoreAtTime: z.number().int().min(0),
   dkpAwarded: z.number().int().min(0),
+  classBonusApplied: z.boolean().default(false),
   createdAt: z.string().datetime(),
   user: z.object({
     id: z.string().cuid(),

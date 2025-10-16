@@ -70,6 +70,7 @@ export interface CreateDkpTransactionData {
   createdBy: string;
   raidInstanceId?: string;
   auctionItemId?: string;
+  classBonusApplied?: boolean;
 }
 
 export interface GetDkpHistoryOptions {
