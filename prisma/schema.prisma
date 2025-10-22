@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,6 +5,269 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id                          String                       @id @default(cuid())
+  email                       String                       @unique
+  name                        String
+  password                    String?
+  avatar                      String?
+  isActive                    Boolean                      @default(true)
+  createdAt                   DateTime                     @default(now())
+  updatedAt                   DateTime                     @updatedAt
+  lvl                         Int                          @default(1)
+  nickname                    String                       @unique
+  role                        UserRole
+  classeId                    String?
+  gearScore                   Int                          @default(0) @map("gear_score")
+  ownedItemIds                String[]                     @default([]) @map("owned_item_ids")
+  bagUrl                      String?                      @map("bag_url")
+  dkpPoints                   Int                          @default(0) @map("dkp_points")
+  clan                        Clan?
+  playerType                  PlayerType?                  @map("player_type")
+  wonAuctionItems             AuctionItem[]                @relation("AuctionWinner")
+  createdAuctions             Auction[]                    @relation("AuctionCreator")
+  bids                        Bid[]                        @relation("BidUser")
+  dkpTransactions             DkpTransaction[]
+  raidAttendanceConfirmations RaidAttendanceConfirmation[] @relation("RaidAttendanceConfirmations")
+  raidParticipations          RaidParticipant[]
+  companyParties              UserCompanyParty[]
+  userItems                   UserItem[]
+  classe                      Classe?                      @relation(fields: [classeId], references: [id])
+
+  @@map("users")
+}
+
+model Classe {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  users     User[]
+
+  @@map("classes")
+}
+
+model CompanyParty {
+  id          String             @id @default(cuid())
+  name        String             @unique
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  description String?
+  maxMembers  Int?
+  users       UserCompanyParty[]
+
+  @@map("company_parties")
+}
+
+model UserCompanyParty {
+  id             String       @id @default(cuid())
+  userId         String
+  companyPartyId String
+  joinedAt       DateTime     @default(now())
+  companyParty   CompanyParty @relation(fields: [companyPartyId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, companyPartyId])
+  @@map("user_company_parties")
+}
+
+model Item {
+  id         String       @id @default(cuid())
+  name       String       @unique
+  category   ItemCategory
+  grade      ItemGrade
+  valorGsInt Int          @map("valor_gs_int")
+  valorDkp   Int          @map("valor_dkp")
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+  userItems  UserItem[]
+
+  @@map("items")
+}
+
+model UserItem {
+  id               String   @id @default(cuid())
+  userId           String   @map("user_id")
+  itemId           String   @map("item_id")
+  enhancementLevel Int      @default(0) @map("enhancement_level")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  isRare           Boolean  @default(false) @map("is_rare")
+  item             Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([itemId])
+  @@map("user_items")
+}
+
+model Raid {
+  id        String         @id @default(cuid())
+  name      String         @unique
+  bossLevel Int            @map("boss_level")
+  baseScore Int            @map("base_score")
+  isActive  Boolean        @default(true)
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+  instances RaidInstance[]
+
+  @@map("raids")
+}
+
+model RaidInstance {
+  id                      String                       @id @default(cuid())
+  raidId                  String                       @map("raid_id")
+  completedAt             DateTime                     @default(now()) @map("completed_at")
+  createdBy               String                       @map("created_by")
+  notes                   String?
+  createdAt               DateTime                     @default(now()) @map("created_at")
+  auditedAt               DateTime?                    @map("audited_at")
+  auditedBy               String?                      @map("audited_by")
+  isAudited               Boolean                      @default(false) @map("is_audited")
+  dkpTransactions         DkpTransaction[]
+  attendanceConfirmations RaidAttendanceConfirmation[]
+  droppedItems            RaidDroppedItem[]
+  raid                    Raid                         @relation(fields: [raidId], references: [id], onDelete: Cascade)
+  participants            RaidParticipant[]
+
+  @@map("raid_instances")
+}
+
+model RaidDroppedItem {
+  id               String        @id @default(cuid())
+  name             String
+  category         ItemCategory
+  grade            ItemGrade
+  minDkpBid        Int           @map("min_dkp_bid")
+  raidInstanceId   String        @map("raid_instance_id")
+  droppedAt        DateTime      @default(now()) @map("dropped_at")
+  createdBy        String        @map("created_by")
+  notes            String?
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+  hasBeenAuctioned Boolean       @default(false) @map("has_been_auctioned")
+  auctionItems     AuctionItem[]
+  raidInstance     RaidInstance  @relation(fields: [raidInstanceId], references: [id], onDelete: Cascade)
+
+  @@map("raid_dropped_items")
+}
+
+model RaidParticipant {
+  id                     String                      @id @default(cuid())
+  raidInstanceId         String                      @map("raid_instance_id")
+  userId                 String                      @map("user_id")
+  gearScoreAtTime        Int                         @map("gear_score_at_time")
+  dkpAwarded             Int                         @map("dkp_awarded")
+  createdAt              DateTime                    @default(now()) @map("created_at")
+  classBonusApplied      Boolean                     @default(false) @map("class_bonus_applied")
+  hasConfirmedAttendance Boolean                     @default(false) @map("has_confirmed_attendance")
+  attendanceConfirmation RaidAttendanceConfirmation?
+  raidInstance           RaidInstance                @relation(fields: [raidInstanceId], references: [id], onDelete: Cascade)
+  user                   User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([raidInstanceId, userId])
+  @@map("raid_participants")
+}
+
+model DkpTransaction {
+  id                String             @id @default(cuid())
+  userId            String             @map("user_id")
+  type              DkpTransactionType
+  amount            Int
+  reason            String
+  createdBy         String             @map("created_by")
+  raidInstanceId    String?            @map("raid_instance_id")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  auctionItemId     String?            @map("auction_item_id")
+  classBonusApplied Boolean            @default(false) @map("class_bonus_applied")
+  auctionItem       AuctionItem?       @relation(fields: [auctionItemId], references: [id])
+  raidInstance      RaidInstance?      @relation(fields: [raidInstanceId], references: [id])
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("dkp_transactions")
+}
+
+model Auction {
+  id                  String        @id @default(cuid())
+  status              AuctionStatus @default(PENDING)
+  defaultTimerSeconds Int           @default(20) @map("default_timer_seconds")
+  minBidIncrement     Int           @default(1) @map("min_bid_increment")
+  createdBy           String        @map("created_by")
+  startedAt           DateTime?     @map("started_at")
+  finishedAt          DateTime?     @map("finished_at")
+  notes               String?
+  createdAt           DateTime      @default(now()) @map("created_at")
+  updatedAt           DateTime      @updatedAt @map("updated_at")
+  items               AuctionItem[]
+  creator             User          @relation("AuctionCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@map("auctions")
+}
+
+model AuctionItem {
+  id                String            @id @default(cuid())
+  auctionId         String            @map("auction_id")
+  raidDroppedItemId String            @map("raid_dropped_item_id")
+  status            AuctionItemStatus @default(WAITING)
+  minBid            Int               @map("min_bid")
+  currentBid        Int?              @map("current_bid")
+  currentWinnerId   String?           @map("current_winner_id")
+  timeRemaining     Int?              @map("time_remaining")
+  startedAt         DateTime?         @map("started_at")
+  finishedAt        DateTime?         @map("finished_at")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  auction           Auction           @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+  currentWinner     User?             @relation("AuctionWinner", fields: [currentWinnerId], references: [id])
+  raidDroppedItem   RaidDroppedItem   @relation(fields: [raidDroppedItemId], references: [id], onDelete: Cascade)
+  bids              Bid[]
+  dkpTransactions   DkpTransaction[]
+
+  @@map("auction_items")
+}
+
+model Bid {
+  id            String      @id @default(cuid())
+  auctionItemId String      @map("auction_item_id")
+  userId        String      @map("user_id")
+  amount        Int
+  status        BidStatus   @default(ACTIVE)
+  createdAt     DateTime    @default(now()) @map("created_at")
+  auctionItem   AuctionItem @relation(fields: [auctionItemId], references: [id], onDelete: Cascade)
+  user          User        @relation("BidUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("bids")
+}
+
+model AuctionAuditLog {
+  id            String   @id @default(cuid())
+  action        String
+  entityType    String   @map("entity_type")
+  entityId      String   @map("entity_id")
+  performedBy   String   @map("performed_by")
+  reason        String?
+  previousValue String?  @map("previous_value")
+  newValue      String?  @map("new_value")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("auction_audit_logs")
+}
+
+model RaidAttendanceConfirmation {
+  id             String          @id @default(cuid())
+  raidInstanceId String          @map("raid_instance_id")
+  participantId  String          @unique @map("participant_id")
+  userId         String          @map("user_id")
+  imageUrl       String          @map("image_url")
+  uploadedAt     DateTime        @default(now()) @map("uploaded_at")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  participant    RaidParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  raidInstance   RaidInstance    @relation(fields: [raidInstanceId], references: [id], onDelete: Cascade)
+  user           User            @relation("RaidAttendanceConfirmations", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("raid_attendance_confirmations")
 }
 
 enum UserRole {
@@ -48,112 +308,6 @@ enum ItemGrade {
   S
 }
 
-model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  name         String
-  nickname     String   @unique
-  password     String?  // Optional for demo purposes
-  avatar       String?
-  isActive     Boolean  @default(true)
-  lvl          Int         @default(1)
-  role         UserRole
-  classeId     String?     // Optional - user can set later
-  playerType   PlayerType? @map("player_type") // Optional - PVP or PVE
-  clan         Clan?       // Optional - CLA1 or CLA2
-  ownedItemIds String[]    @default([]) @map("owned_item_ids") // Array of item IDs that user owns
-  gearScore    Int         @default(0) @map("gear_score") // Total gear score from owned items
-  dkpPoints    Int         @default(0) @map("dkp_points") // DKP points balance
-  bagUrl       String?     @map("bag_url") // Optional URL for inventory image
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-
-  // Relations
-  classe              Classe?            @relation(fields: [classeId], references: [id])
-  companyParties      UserCompanyParty[]
-  dkpTransactions     DkpTransaction[]
-  raidParticipations  RaidParticipant[]
-  createdAuctions     Auction[]          @relation("AuctionCreator")
-  bids                Bid[]              @relation("BidUser")
-  wonAuctionItems     AuctionItem[]      @relation("AuctionWinner")
-  userItems           UserItem[]
-
-  @@map("users")
-}
-
-model Classe {
-  id        String   @id @default(cuid())
-  name      String
-  createdAt DateTime @default(now())
-
-  // Relations
-  users User[]
-
-  @@map("classes")
-}
-
-model CompanyParty {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?  // Optional description
-  maxMembers  Int?     // Optional maximum number of members
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Many-to-many relationship with User
-  users UserCompanyParty[]
-
-  @@map("company_parties")
-}
-
-model UserCompanyParty {
-  id             String       @id @default(cuid())
-  userId         String
-  companyPartyId String
-  joinedAt       DateTime     @default(now())
-
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  companyParty CompanyParty @relation(fields: [companyPartyId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, companyPartyId])
-  @@map("user_company_parties")
-}
-
-model Item {
-  id          String       @id @default(cuid())
-  name        String       @unique
-  category    ItemCategory
-  grade       ItemGrade
-  valorGsInt  Int          @map("valor_gs_int")
-  valorDkp    Int          @map("valor_dkp")
-  createdAt   DateTime     @default(now()) @map("created_at")
-  updatedAt   DateTime     @updatedAt @map("updated_at")
-
-  // Relations
-  userItems   UserItem[]
-
-  @@map("items")
-}
-
-model UserItem {
-  id               String   @id @default(cuid())
-  userId           String   @map("user_id")
-  itemId           String   @map("item_id")
-  enhancementLevel Int      @default(0) @map("enhancement_level") // 0-12
-  isRare           Boolean  @default(false) @map("is_rare") // Rare items get +10 GS bonus
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  item             Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
-
-  // Indexes
-  @@index([userId])
-  @@index([itemId])
-  @@map("user_items")
-}
-
 enum DkpTransactionType {
   RAID_REWARD
   MANUAL_ADJUSTMENT
@@ -161,185 +315,23 @@ enum DkpTransactionType {
 }
 
 enum AuctionStatus {
-  PENDING    // Created but not started
-  ACTIVE     // Currently running
-  FINISHED   // Completed
-  CANCELLED  // Cancelled by admin
+  PENDING
+  ACTIVE
+  FINISHED
+  CANCELLED
 }
 
 enum AuctionItemStatus {
-  WAITING      // Waiting to be auctioned
-  IN_AUCTION   // Currently being auctioned
-  SOLD         // Sold with bids
-  NO_BIDS      // Finished with no bids
-  CANCELLED    // Cancelled
+  WAITING
+  IN_AUCTION
+  SOLD
+  NO_BIDS
+  CANCELLED
 }
 
 enum BidStatus {
-  ACTIVE      // Current highest bid
-  OUTBID      // Outbid by another player
-  WON         // Won the auction
-  CANCELLED   // Auction was cancelled
-}
-
-model Raid {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  bossLevel   Int      @map("boss_level")
-  baseScore   Int      @map("base_score") // Used in DKP calculation formula
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  instances   RaidInstance[]
-
-  @@map("raids")
-}
-
-model RaidInstance {
-  id            String   @id @default(cuid())
-  raidId        String   @map("raid_id")
-  completedAt   DateTime @default(now()) @map("completed_at")
-  createdBy     String   @map("created_by") // Admin who registered the raid
-  notes         String?  // Optional notes about the raid
-  createdAt     DateTime @default(now()) @map("created_at")
-
-  // Relations
-  raid            Raid @relation(fields: [raidId], references: [id], onDelete: Cascade)
-  participants    RaidParticipant[]
-  dkpTransactions DkpTransaction[]
-  droppedItems    RaidDroppedItem[]
-
-  @@map("raid_instances")
-}
-
-model RaidDroppedItem {
-  id              String       @id @default(cuid())
-  name            String
-  category        ItemCategory
-  grade           ItemGrade
-  minDkpBid       Int          @map("min_dkp_bid") // Minimum DKP bid amount
-  hasBeenAuctioned Boolean     @default(false) @map("has_been_auctioned") // Track if item has been auctioned
-  raidInstanceId  String       @map("raid_instance_id")
-  droppedAt       DateTime     @default(now()) @map("dropped_at")
-  createdBy       String       @map("created_by") // Admin who added the item
-  notes           String?      // Optional notes about the drop
-  createdAt       DateTime     @default(now()) @map("created_at")
-  updatedAt       DateTime     @updatedAt @map("updated_at")
-
-  // Relations
-  raidInstance    RaidInstance @relation(fields: [raidInstanceId], references: [id], onDelete: Cascade)
-  auctionItems    AuctionItem[] // Items that reference this dropped item
-
-  @@map("raid_dropped_items")
-}
-
-model RaidParticipant {
-  id                 String   @id @default(cuid())
-  raidInstanceId     String   @map("raid_instance_id")
-  userId             String   @map("user_id")
-  gearScoreAtTime    Int      @map("gear_score_at_time") // GS when raid was completed
-  dkpAwarded         Int      @map("dkp_awarded") // Calculated DKP for this participant
-  classBonusApplied  Boolean  @default(false) @map("class_bonus_applied") // Whether 15% support class bonus was applied
-  createdAt          DateTime @default(now()) @map("created_at")
-
-  // Relations
-  raidInstance    RaidInstance @relation(fields: [raidInstanceId], references: [id], onDelete: Cascade)
-  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([raidInstanceId, userId]) // Prevent duplicate participation
-  @@map("raid_participants")
-}
-
-model DkpTransaction {
-  id                 String             @id @default(cuid())
-  userId             String             @map("user_id")
-  type               DkpTransactionType
-  amount             Int                // Positive for credits, negative for debits
-  reason             String             // Required description
-  createdBy          String             @map("created_by") // Admin who created the transaction
-  raidInstanceId     String?            @map("raid_instance_id") // For raid rewards
-  auctionItemId      String?            @map("auction_item_id") // For auction purchases
-  classBonusApplied  Boolean            @default(false) @map("class_bonus_applied") // Whether 15% support class bonus was applied
-  createdAt          DateTime           @default(now()) @map("created_at")
-
-  // Relations
-  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  raidInstance    RaidInstance? @relation(fields: [raidInstanceId], references: [id], onDelete: SetNull)
-  auctionItem     AuctionItem? @relation(fields: [auctionItemId], references: [id], onDelete: SetNull)
-
-  @@map("dkp_transactions")
-}
-
-model Auction {
-  id              String        @id @default(cuid())
-  status          AuctionStatus @default(PENDING)
-  defaultTimerSeconds Int       @default(20) @map("default_timer_seconds") // Default timer per item
-  minBidIncrement Int           @default(1) @map("min_bid_increment") // Minimum bid increment
-  createdBy       String        @map("created_by") // Admin who created the auction
-  startedAt       DateTime?     @map("started_at") // When auction was started
-  finishedAt      DateTime?     @map("finished_at") // When auction finished
-  notes           String?       // Optional notes
-  createdAt       DateTime      @default(now()) @map("created_at")
-  updatedAt       DateTime      @updatedAt @map("updated_at")
-
-  // Relations
-  creator         User          @relation("AuctionCreator", fields: [createdBy], references: [id], onDelete: Cascade)
-  items           AuctionItem[]
-
-  @@map("auctions")
-}
-
-model AuctionItem {
-  id                  String            @id @default(cuid())
-  auctionId           String            @map("auction_id")
-  raidDroppedItemId   String            @map("raid_dropped_item_id")
-  status              AuctionItemStatus @default(WAITING)
-  minBid              Int               @map("min_bid") // Minimum starting bid
-  currentBid          Int?              @map("current_bid") // Current highest bid amount
-  currentWinnerId     String?           @map("current_winner_id") // Current highest bidder
-  timeRemaining       Int?              @map("time_remaining") // Seconds remaining (null if not started)
-  startedAt           DateTime?         @map("started_at") // When this item's auction started
-  finishedAt          DateTime?         @map("finished_at") // When this item's auction finished
-  createdAt           DateTime          @default(now()) @map("created_at")
-  updatedAt           DateTime          @updatedAt @map("updated_at")
-
-  // Relations
-  auction             Auction           @relation(fields: [auctionId], references: [id], onDelete: Cascade)
-  raidDroppedItem     RaidDroppedItem   @relation(fields: [raidDroppedItemId], references: [id], onDelete: Cascade)
-  currentWinner       User?             @relation("AuctionWinner", fields: [currentWinnerId], references: [id], onDelete: SetNull)
-  bids                Bid[]
-  dkpTransactions     DkpTransaction[]
-
-  @@map("auction_items")
-}
-
-model Bid {
-  id              String    @id @default(cuid())
-  auctionItemId   String    @map("auction_item_id")
-  userId          String    @map("user_id")
-  amount          Int       // Bid amount in DKP
-  status          BidStatus @default(ACTIVE)
-  createdAt       DateTime  @default(now()) @map("created_at")
-
-  // Relations
-  auctionItem     AuctionItem @relation(fields: [auctionItemId], references: [id], onDelete: Cascade)
-  user            User        @relation("BidUser", fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("bids")
-}
-
-model AuctionAuditLog {
-  id                  String   @id @default(cuid())
-  action              String   // Action performed (e.g., "RESET_AUCTIONED_FLAG")
-  entityType          String   @map("entity_type") // Type of entity (e.g., "RaidDroppedItem")
-  entityId            String   @map("entity_id") // ID of the entity
-  performedBy         String   @map("performed_by") // Admin who performed the action
-  reason              String?  // Optional reason for the action
-  previousValue       String?  @map("previous_value") // Previous value (JSON)
-  newValue            String?  @map("new_value") // New value (JSON)
-  createdAt           DateTime @default(now()) @map("created_at")
-
-  @@map("auction_audit_logs")
+  ACTIVE
+  OUTBID
+  WON
+  CANCELLED
 }

@@ -143,6 +143,9 @@ export const raidInstanceResponseSchema = z.object({
   createdBy: z.string().cuid(),
   notes: z.string().nullable(),
   createdAt: z.string().datetime(),
+  isAudited: z.boolean().default(false),
+  auditedAt: z.string().datetime().nullable().optional(),
+  auditedBy: z.string().cuid().nullable().optional(),
   raid: raidResponseSchema,
   participants: z.array(raidParticipantSchema),
 });

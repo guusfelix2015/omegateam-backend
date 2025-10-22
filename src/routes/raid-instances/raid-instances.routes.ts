@@ -135,6 +135,16 @@ const raidInstancesRoutes: FastifyPluginAsync = async fastify => {
     },
   });
 
+  // PATCH /raid-instances/:id/participants/:participantId/gear-score - Sync participant gear score with current value (ADMIN only)
+  fastify.patch<{
+    Params: RaidInstanceParams & { participantId: string };
+  }>('/:id/participants/:participantId/gear-score', {
+    preValidation: [fastify.authenticate, fastify.requireAdmin],
+    handler: async (request, reply) => {
+      return raidInstancesController.updateParticipantGearScore(request, reply);
+    },
+  });
+
   // DELETE /raid-instances/:id/participants/:userId - Remove participant from raid instance (ADMIN only)
   fastify.delete<{
     Params: RaidInstanceParams & { userId: string };

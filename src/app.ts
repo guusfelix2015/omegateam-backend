@@ -20,6 +20,7 @@ import raidsRoutes from '@/routes/raids/raids.routes.ts';
 import raidInstancesRoutes from '@/routes/raid-instances/raid-instances.routes.ts';
 
 import raidDroppedItemsRoutes from '@/routes/raid-dropped-items/raid-dropped-items.routes.ts';
+import raidAttendanceRoutes from '@/routes/raid-attendance/raid-attendance.routes.ts';
 import dkpRoutes from '@/routes/dkp/dkp.routes.ts';
 import auctionsRoutes from '@/routes/auctions/auctions.routes.ts';
 import uploadRoutes from '@/routes/upload/upload.routes.ts';
@@ -71,6 +72,7 @@ export async function createApp(): Promise<FastifyInstance> {
   await app.register(lookupsRoutes, { prefix: '/lookups' });
   await app.register(raidsRoutes, { prefix: '/raids' });
   await app.register(raidInstancesRoutes, { prefix: '/raid-instances' });
+  await app.register(raidAttendanceRoutes, { prefix: '/raid-instances' });
   await app.register(raidDroppedItemsRoutes, { prefix: '/raid-dropped-items' });
   await app.register(dkpRoutes, { prefix: '/dkp' });
   await app.register(auctionsRoutes, { prefix: '/auctions' });

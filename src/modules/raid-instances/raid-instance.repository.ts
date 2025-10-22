@@ -87,6 +87,20 @@ export class RaidInstanceRepository {
     }
   }
 
+  async updateParticipant(
+    participantId: string,
+    data: {
+      gearScoreAtTime?: number;
+      dkpAwarded?: number;
+      classBonusApplied?: boolean;
+    }
+  ): Promise<RaidParticipant> {
+    return this.prisma.raidParticipant.update({
+      where: { id: participantId },
+      data,
+    });
+  }
+
   async findAll(
     options: GetRaidInstancesOptions = {}
   ): Promise<{ data: RaidInstanceWithRelations[]; total: number }> {
@@ -124,7 +138,16 @@ export class RaidInstanceRepository {
         orderBy: {
           [sortBy]: sortOrder,
         },
-        include: {
+        select: {
+          id: true,
+          raidId: true,
+          completedAt: true,
+          createdBy: true,
+          notes: true,
+          createdAt: true,
+          isAudited: true,
+          auditedAt: true,
+          auditedBy: true,
           raid: {
             select: {
               id: true,
@@ -162,7 +185,16 @@ export class RaidInstanceRepository {
   async findById(id: string): Promise<RaidInstanceWithRelations | null> {
     return this.prisma.raidInstance.findUnique({
       where: { id },
-      include: {
+      select: {
+        id: true,
+        raidId: true,
+        completedAt: true,
+        createdBy: true,
+        notes: true,
+        createdAt: true,
+        isAudited: true,
+        auditedAt: true,
+        auditedBy: true,
         raid: {
           select: {
             id: true,
@@ -263,7 +295,16 @@ export class RaidInstanceRepository {
       orderBy: {
         completedAt: 'desc',
       },
-      include: {
+      select: {
+        id: true,
+        raidId: true,
+        completedAt: true,
+        createdBy: true,
+        notes: true,
+        createdAt: true,
+        isAudited: true,
+        auditedAt: true,
+        auditedBy: true,
         raid: {
           select: {
             id: true,
@@ -288,6 +329,12 @@ export class RaidInstanceRepository {
           },
         },
       },
+    });
+  }
+
+  async findParticipantById(participantId: string): Promise<RaidParticipant | null> {
+    return this.prisma.raidParticipant.findUnique({
+      where: { id: participantId },
     });
   }
 }

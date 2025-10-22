@@ -45,6 +45,9 @@ export class RaidInstanceService {
       createdBy: raidInstance.createdBy,
       notes: raidInstance.notes,
       createdAt: raidInstance.createdAt.toISOString(),
+      isAudited: raidInstance.isAudited,
+      auditedAt: raidInstance.auditedAt?.toISOString() ?? null,
+      auditedBy: raidInstance.auditedBy ?? null,
       raid: {
         id: raidInstance.raid.id,
         name: raidInstance.raid.name,
@@ -429,6 +432,68 @@ export class RaidInstanceService {
         },
       };
     });
+  }
+
+  async updateParticipantGearScore(
+    raidInstanceId: string,
+    participantId: string
+  ): Promise<RaidParticipantSchema> {
+    // Validate that raid instance exists and is not audited
+    const raidInstance = await this.raidInstanceRepository.findById(raidInstanceId);
+    if (!raidInstance) {
+      throw new NotFoundError('Raid instance');
+    }
+
+    if (raidInstance.isAudited) {
+      throw new ValidationError('Cannot update gear score for an audited raid');
+    }
+
+    // Validate that participant exists
+    const participant = await this.raidInstanceRepository.findParticipantById(participantId);
+    if (!participant || participant.raidInstanceId !== raidInstanceId) {
+      throw new NotFoundError('Participant');
+    }
+
+    // Get raid details for DKP recalculation
+    const raid = await this.raidRepository.findById(raidInstance.raidId);
+    if (!raid) {
+      throw new NotFoundError('Raid');
+    }
+
+    // Fetch the user's current gear score
+    const user = await this.userRepository.findById(participant.userId);
+    if (!user) {
+      throw new NotFoundError('User');
+    }
+
+    const currentGearScore = user.gearScore || 0;
+
+    // Calculate new DKP with the updated gear score
+    const dkpResult = this.dkpCalculationService.calculateDkpForParticipant(
+      raid.bossLevel,
+      currentGearScore,
+      participant.user?.classe?.name
+    );
+
+    // Update participant with new gear score and DKP
+    const updatedParticipant = await this.raidInstanceRepository.updateParticipant(
+      participantId,
+      {
+        gearScoreAtTime: currentGearScore,
+        dkpAwarded: dkpResult.dkpPoints,
+        classBonusApplied: dkpResult.classBonusApplied,
+      }
+    );
+
+    return {
+      id: updatedParticipant.id,
+      raidInstanceId: updatedParticipant.raidInstanceId,
+      userId: updatedParticipant.userId,
+      gearScoreAtTime: updatedParticipant.gearScoreAtTime,
+      dkpAwarded: updatedParticipant.dkpAwarded,
+      createdAt: updatedParticipant.createdAt.toISOString(),
+      user: participant.user,
+    };
   }
 
   async removeParticipant(raidInstanceId: string, userId: string): Promise<void> {

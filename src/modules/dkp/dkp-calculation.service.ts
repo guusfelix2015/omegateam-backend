@@ -75,13 +75,16 @@ export class DkpCalculationService {
     bossLevel: number,
     participants: Array<{ userId: string; gearScore: number }>
   ): Array<{ userId: string; gearScore: number; dkpAwarded: number }> {
-    return participants.map(participant => ({
-      ...participant,
-      dkpAwarded: this.calculateDkpForParticipant(
+    return participants.map(participant => {
+      const dkpResult = this.calculateDkpForParticipant(
         bossLevel,
         participant.gearScore
-      ),
-    }));
+      );
+      return {
+        ...participant,
+        dkpAwarded: dkpResult.dkpPoints,
+      };
+    });
   }
 
   /**

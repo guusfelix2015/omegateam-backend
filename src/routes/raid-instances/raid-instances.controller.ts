@@ -143,6 +143,21 @@ export class RaidInstancesController {
     return reply.status(201).send(participant);
   }
 
+  async updateParticipantGearScore(
+    request: FastifyRequest<{
+      Params: RaidInstanceParams & { participantId: string };
+    }>,
+    reply: FastifyReply
+  ) {
+    const { id: raidInstanceId, participantId } = request.params;
+
+    const participant = await this.raidInstanceService.updateParticipantGearScore(
+      raidInstanceId,
+      participantId
+    );
+    return reply.status(200).send(participant);
+  }
+
   async removeParticipant(
     request: FastifyRequest<{
       Params: RaidInstanceParams & { userId: string };

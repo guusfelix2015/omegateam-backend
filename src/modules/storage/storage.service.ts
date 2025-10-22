@@ -144,6 +144,77 @@ export class StorageService {
   }
 
   /**
+   * Upload raid attendance proof image to Contabo Object Storage
+   */
+  async uploadRaidAttendanceImage(
+    file: MultipartFile,
+    raidInstanceId: string
+  ): Promise<string> {
+    try {
+      console.log('[Storage] Reading raid attendance file buffer...');
+      console.log('[Storage] File info:', {
+        filename: file.filename,
+        mimetype: file.mimetype,
+        encoding: file.encoding,
+      });
+
+      // Read file buffer first
+      const buffer = await file.toBuffer();
+
+      console.log('[Storage] Buffer read successfully, size:', buffer.length, 'bytes');
+
+      // Validate file with buffer
+      this.validateFile(file, buffer);
+
+      console.log('[Storage] File validation passed');
+
+      // Generate unique filename with raid instance ID
+      const filename = this.generateFilename(
+        file.filename,
+        `raid-attendance/${raidInstanceId}`
+      );
+
+      console.log('[Storage] Generated filename:', filename);
+
+      // Upload to S3
+      const command = new PutObjectCommand({
+        Bucket: this.bucketName,
+        Key: filename,
+        Body: buffer,
+        ContentType: file.mimetype,
+      });
+
+      console.log('[Storage] Uploading raid attendance to S3...', {
+        bucket: this.bucketName,
+        key: filename,
+        size: buffer.length,
+      });
+
+      await this.s3Client.send(command);
+
+      console.log('[Storage] S3 upload successful');
+
+      // Construct public URL
+      const publicUrl = `${this.publicUrl}/${filename}`;
+
+      console.log('[Storage] Public URL:', publicUrl);
+
+      return publicUrl;
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        console.log('[Storage] Validation error:', error.message);
+        throw error;
+      }
+
+      console.error('[Storage] Upload error:', error);
+
+      throw new Error(
+        `Failed to upload attendance image: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  /**
    * Delete image from storage (optional - for cleanup)
    */
   async deleteImage(imageUrl: string): Promise<void> {
