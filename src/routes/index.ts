@@ -170,10 +170,11 @@ const indexRoutes: FastifyPluginAsync = async fastify => {
           name: { type: 'string' },
           nickname: { type: 'string' },
           phone: { type: 'string' },
+          lvl: { type: 'number', minimum: 1, maximum: 85 },
           playerType: { type: 'string', enum: ['PVP', 'PVE'] },
           classeId: { type: 'string', nullable: true },
         },
-        required: ['email', 'password', 'name', 'nickname', 'phone', 'playerType'],
+        required: ['email', 'password', 'name', 'nickname', 'phone', 'lvl', 'playerType'],
       },
       response: {
         201: {

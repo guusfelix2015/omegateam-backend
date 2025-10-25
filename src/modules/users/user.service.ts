@@ -173,7 +173,7 @@ export class UserService {
       classeId: data.classeId === '' ? null : data.classeId,
       role: 'PLAYER' as const, // Always set to PLAYER for public registration
       isActive: true,
-      lvl: 1,
+      lvl: data.lvl,
     };
 
     // Generate avatar if not provided
