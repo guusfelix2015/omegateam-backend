@@ -1,6 +1,8 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { login } from '@/libs/auth.ts';
 import { z } from 'zod';
+import { UserService } from '@/modules/users/user.service.ts';
+import { registerUserSchema } from '@/routes/users/users.schema.ts';
 
 // eslint-disable-next-line @typescript-eslint/require-await
 const indexRoutes: FastifyPluginAsync = async fastify => {
@@ -152,6 +154,87 @@ const indexRoutes: FastifyPluginAsync = async fastify => {
         token,
         message: 'Login successful',
       });
+    },
+  });
+
+  // Public registration endpoint
+  fastify.post('/auth/register', {
+    schema: {
+      description: 'Public user registration endpoint',
+      tags: ['Authentication'],
+      body: {
+        type: 'object',
+        properties: {
+          email: { type: 'string', format: 'email' },
+          password: { type: 'string', minLength: 6 },
+          name: { type: 'string' },
+          nickname: { type: 'string' },
+          phone: { type: 'string' },
+          playerType: { type: 'string', enum: ['PVP', 'PVE'] },
+          classeId: { type: 'string', nullable: true },
+        },
+        required: ['email', 'password', 'name', 'nickname', 'phone', 'playerType'],
+      },
+      response: {
+        201: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            email: { type: 'string' },
+            name: { type: 'string' },
+            nickname: { type: 'string' },
+            role: { type: 'string' },
+            message: { type: 'string' },
+          },
+        },
+        400: {
+          type: 'object',
+          properties: {
+            error: {
+              type: 'object',
+              properties: {
+                message: { type: 'string' },
+                statusCode: { type: 'number' },
+              },
+            },
+          },
+        },
+      },
+    },
+    handler: async (request, reply) => {
+      try {
+        const data = registerUserSchema.parse(request.body);
+        const userService = new UserService(fastify.prisma);
+        const user = await userService.registerUser(data);
+
+        return reply.status(201).send({
+          ...user,
+          message: 'Registration successful',
+        });
+      } catch (error: any) {
+        if (error.code === 'P2002') {
+          // Unique constraint violation
+          const field = error.meta?.target?.[0] || 'email';
+          return reply.status(400).send({
+            error: {
+              message: `${field} already exists`,
+              statusCode: 400,
+            },
+          });
+        }
+
+        if (error.errors) {
+          // Zod validation error
+          return reply.status(400).send({
+            error: {
+              message: error.errors[0]?.message || 'Validation failed',
+              statusCode: 400,
+            },
+          });
+        }
+
+        throw error;
+      }
     },
   });
 

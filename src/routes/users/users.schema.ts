@@ -76,6 +76,34 @@ export const createUserSchema = z.object({
     .transform(val => (val === '' ? null : val)),
 });
 
+// Public registration schema - for user self-registration
+export const registerUserSchema = z.object({
+  email: z.string().email('Email inválido'),
+  password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
+  name: z.string().min(1, 'Nome é obrigatório').max(100, 'Nome muito longo'),
+  nickname: z
+    .string()
+    .min(1, 'Nickname é obrigatório')
+    .max(50, 'Nickname muito longo')
+    .regex(
+      /^[a-zA-Z0-9_]+$/,
+      'Nickname pode conter apenas letras, números e underscore'
+    ),
+  phone: z
+    .string()
+    .regex(
+      /^\+\d{1,3}\d{8,14}$/,
+      'Telefone deve estar no formato internacional (ex: +55XXXXXXXXXXX)'
+    ),
+  playerType: playerTypeSchema,
+  classeId: z
+    .string()
+    .cuid()
+    .nullable()
+    .optional()
+    .transform(val => (val === '' ? null : val)),
+});
+
 export const updateUserSchema = z.object({
   email: z.string().email('Invalid email format').optional(),
   name: z
@@ -266,6 +294,7 @@ export const updateItemEnhancementSchema = z.object({
 export type UserRole = z.infer<typeof userRoleSchema>;
 export type User = z.infer<typeof userSchema>;
 export type CreateUserInput = z.infer<typeof createUserSchema>;
+export type RegisterUserInput = z.infer<typeof registerUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type GetUsersQuery = z.infer<typeof getUsersQuerySchema>;

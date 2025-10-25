@@ -1,6 +1,7 @@
 import type { PrismaClient, ItemCategory } from '@prisma/client';
 import type {
   CreateUserInput,
+  RegisterUserInput,
   UpdateUserInput,
   UpdateProfileInput,
   GetUsersQuery,
@@ -56,9 +57,9 @@ export class UserService {
         updatedAt: user.updatedAt.toISOString(),
         classe: user.classe
           ? {
-              ...user.classe,
-              createdAt: user.classe.createdAt.toISOString(),
-            }
+            ...user.classe,
+            createdAt: user.classe.createdAt.toISOString(),
+          }
           : null,
       })),
       pagination: {
@@ -100,9 +101,9 @@ export class UserService {
       updatedAt: user.updatedAt.toISOString(),
       classe: user.classe
         ? {
-            ...user.classe,
-            createdAt: user.classe.createdAt.toISOString(),
-          }
+          ...user.classe,
+          createdAt: user.classe.createdAt.toISOString(),
+        }
         : null,
       companyParties,
     };
@@ -149,6 +150,50 @@ export class UserService {
     };
   }
 
+  async registerUser(data: RegisterUserInput): Promise<UserResponse> {
+    // Validate password
+    const passwordValidation = PasswordUtils.validatePassword(data.password);
+    if (!passwordValidation.isValid) {
+      throw new Error(
+        `Password validation failed: ${passwordValidation.errors.join(', ')}`
+      );
+    }
+
+    // Hash the password
+    const hashedPassword = await PasswordUtils.hash(data.password);
+
+    // Clean the data and ensure role is always PLAYER for public registration
+    const cleanData = {
+      email: data.email,
+      password: hashedPassword,
+      name: data.name,
+      nickname: data.nickname,
+      phone: data.phone,
+      playerType: data.playerType,
+      classeId: data.classeId === '' ? null : data.classeId,
+      role: 'PLAYER' as const, // Always set to PLAYER for public registration
+      isActive: true,
+      lvl: 1,
+    };
+
+    // Generate avatar if not provided
+    const seed = encodeURIComponent(
+      cleanData.name.toLowerCase().replace(/\s+/g, '')
+    );
+    const avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
+
+    const user = await this.userRepository.create({
+      ...cleanData,
+      avatar,
+    });
+
+    return {
+      ...user,
+      createdAt: user.createdAt.toISOString(),
+      updatedAt: user.updatedAt.toISOString(),
+    };
+  }
+
   async updateUser(id: string, data: UpdateUserInput): Promise<UserResponse> {
     const exists = await this.userRepository.exists(id);
     if (!exists) {
@@ -175,9 +220,9 @@ export class UserService {
       updatedAt: user.updatedAt.toISOString(),
       classe: user.classe
         ? {
-            ...user.classe,
-            createdAt: user.classe.createdAt.toISOString(),
-          }
+          ...user.classe,
+          createdAt: user.classe.createdAt.toISOString(),
+        }
         : null,
     };
   }
@@ -215,9 +260,9 @@ export class UserService {
       updatedAt: user.updatedAt.toISOString(),
       classe: user.classe
         ? {
-            ...user.classe,
-            createdAt: user.classe.createdAt.toISOString(),
-          }
+          ...user.classe,
+          createdAt: user.classe.createdAt.toISOString(),
+        }
         : null,
     };
   }
@@ -245,9 +290,9 @@ export class UserService {
       updatedAt: user.updatedAt.toISOString(),
       classe: user.classe
         ? {
-            ...user.classe,
-            createdAt: user.classe.createdAt.toISOString(),
-          }
+          ...user.classe,
+          createdAt: user.classe.createdAt.toISOString(),
+        }
         : null,
     };
   }

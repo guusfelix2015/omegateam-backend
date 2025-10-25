@@ -26,6 +26,7 @@ model User {
   dkpPoints                   Int                          @default(0) @map("dkp_points")
   clan                        Clan?
   playerType                  PlayerType?                  @map("player_type")
+  phone                       String?
   wonAuctionItems             AuctionItem[]                @relation("AuctionWinner")
   createdAuctions             Auction[]                    @relation("AuctionCreator")
   bids                        Bid[]                        @relation("BidUser")

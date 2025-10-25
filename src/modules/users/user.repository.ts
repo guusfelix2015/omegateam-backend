@@ -16,7 +16,7 @@ type UserWithClasse = Omit<User, 'password'> & {
 };
 
 export class UserRepository {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: PrismaClient) { }
 
   async findMany(query: GetUsersQuery) {
     const { page, limit, search, isActive, role, sortBy, sortOrder } = query;
@@ -193,10 +193,13 @@ export class UserRepository {
           lvl: true,
           role: true,
           classeId: true,
+          classe: true,
           ownedItemIds: true,
           gearScore: true,
           dkpPoints: true,
           bagUrl: true,
+          phone: true,
+          playerType: true,
           createdAt: true,
           updatedAt: true,
         },
