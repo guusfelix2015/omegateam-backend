@@ -24,6 +24,7 @@ import raidAttendanceRoutes from '@/routes/raid-attendance/raid-attendance.route
 import dkpRoutes from '@/routes/dkp/dkp.routes.ts';
 import auctionsRoutes from '@/routes/auctions/auctions.routes.ts';
 import uploadRoutes from '@/routes/upload/upload.routes.ts';
+import settingsRoutes from '@/routes/settings/settings.routes.ts';
 
 export async function createApp(): Promise<FastifyInstance> {
   const app = Fastify({
@@ -77,6 +78,7 @@ export async function createApp(): Promise<FastifyInstance> {
   await app.register(dkpRoutes, { prefix: '/dkp' });
   await app.register(auctionsRoutes, { prefix: '/auctions' });
   await app.register(uploadRoutes, { prefix: '/upload' });
+  await app.register(settingsRoutes, { prefix: '/settings' });
 
   // 404 handler
   app.setNotFoundHandler(async (request, reply) => {
