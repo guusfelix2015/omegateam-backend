@@ -96,7 +96,11 @@ export const registerUserSchema = z.object({
       /^\+\d{1,3}\d{8,14}$/,
       'Telefone deve estar no formato internacional (ex: +55XXXXXXXXXXX)'
     ),
-  lvl: z.number().int().min(1, 'Nível deve ser no mínimo 1').max(85, 'Nível máximo é 85'),
+  lvl: z
+    .number()
+    .int()
+    .min(1, 'Nível deve ser no mínimo 1')
+    .max(85, 'Nível máximo é 85'),
   playerType: playerTypeSchema,
   classeId: z
     .string()
@@ -157,6 +161,7 @@ export const updateProfileSchema = z.object({
     .min(6, 'Password must be at least 6 characters')
     .optional(),
   avatar: z.string().url('Invalid avatar URL').nullable().optional(),
+  phone: z.string().nullable().optional(),
   lvl: z.number().int().min(1).max(85).optional(),
   classeId: z.string().cuid().nullable().optional(),
   playerType: playerTypeSchema.nullable().optional(),

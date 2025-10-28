@@ -265,6 +265,7 @@ const indexRoutes: FastifyPluginAsync = async fastify => {
             email: { type: 'string' },
             name: { type: 'string' },
             nickname: { type: 'string' },
+            phone: { type: 'string', nullable: true },
             role: { type: 'string', enum: ['ADMIN', 'PLAYER', 'CP_LEADER'] },
             isActive: { type: 'boolean' },
             lastLoginAt: { type: 'string', nullable: true },
@@ -322,6 +323,8 @@ const indexRoutes: FastifyPluginAsync = async fastify => {
           email: true,
           name: true,
           nickname: true,
+          avatar: true,
+          phone: true,
           role: true,
           isActive: true,
           lastLoginAt: true,
@@ -358,9 +361,9 @@ const indexRoutes: FastifyPluginAsync = async fastify => {
         updatedAt: user.updatedAt.toISOString(),
         classe: user.classe
           ? {
-              ...user.classe,
-              createdAt: user.classe.createdAt.toISOString(),
-            }
+            ...user.classe,
+            createdAt: user.classe.createdAt.toISOString(),
+          }
           : null,
       });
     },
