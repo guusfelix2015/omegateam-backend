@@ -32,6 +32,10 @@ interface AuthPrismaClient {
         isActive: boolean;
       };
     }) => Promise<UserFromDB | null>;
+    update: (args: {
+      where: { id: string };
+      data: { lastLoginAt: Date };
+    }) => Promise<unknown>;
   };
 }
 
@@ -154,6 +158,17 @@ export async function login(
 
   if (!isPasswordValid) {
     throw new UnauthorizedError('Invalid credentials');
+  }
+
+  // Registrar timestamp de último login
+  try {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
+  } catch (error) {
+    // Log error but don't fail the login
+    console.error('Erro ao atualizar lastLoginAt:', error);
   }
 
   return createToken({

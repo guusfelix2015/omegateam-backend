@@ -16,7 +16,7 @@ type UserWithClasse = Omit<User, 'password'> & {
 };
 
 export class UserRepository {
-  constructor(private prisma: PrismaClient) { }
+  constructor(private prisma: PrismaClient) {}
 
   async findMany(query: GetUsersQuery) {
     const { page, limit, search, isActive, role, sortBy, sortOrder } = query;
@@ -107,6 +107,10 @@ export class UserRepository {
         gearScore: true,
         dkpPoints: true,
         bagUrl: true,
+        phone: true,
+        playerType: true,
+        lastLoginAt: true,
+        clan: true,
         createdAt: true,
         updatedAt: true,
         classe: {
@@ -139,6 +143,10 @@ export class UserRepository {
         gearScore: true,
         dkpPoints: true,
         bagUrl: true,
+        phone: true,
+        playerType: true,
+        lastLoginAt: true,
+        clan: true,
         createdAt: true,
         updatedAt: true,
         classe: {
@@ -171,6 +179,10 @@ export class UserRepository {
         gearScore: true,
         dkpPoints: true,
         bagUrl: true,
+        phone: true,
+        playerType: true,
+        lastLoginAt: true,
+        clan: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -200,6 +212,8 @@ export class UserRepository {
           bagUrl: true,
           phone: true,
           playerType: true,
+          lastLoginAt: true,
+          clan: true,
           createdAt: true,
           updatedAt: true,
         },
@@ -242,6 +256,10 @@ export class UserRepository {
           gearScore: true,
           dkpPoints: true,
           bagUrl: true,
+          phone: true,
+          playerType: true,
+          lastLoginAt: true,
+          clan: true,
           createdAt: true,
           updatedAt: true,
           classe: {
@@ -494,6 +512,91 @@ export class UserRepository {
       },
       orderBy: {
         name: 'asc',
+      },
+    });
+  }
+
+  /**
+   * Busca usuários inativos (com isActive: false)
+   */
+  async findInactiveUsers() {
+    return this.prisma.user.findMany({
+      where: {
+        isActive: false,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        lastLoginAt: true,
+      },
+      orderBy: {
+        lastLoginAt: 'desc',
+      },
+    });
+  }
+
+  /**
+   * Busca usuários potencialmente inativos (não fizeram login há mais de X dias mas ainda estão ativos)
+   */
+  async findPotentiallyInactiveUsers(inactiveDays: number = 7) {
+    const limitDate = new Date();
+    limitDate.setDate(limitDate.getDate() - inactiveDays);
+
+    return this.prisma.user.findMany({
+      where: {
+        isActive: true,
+        lastLoginAt: {
+          lt: limitDate,
+        },
+        NOT: {
+          lastLoginAt: null,
+        },
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        lastLoginAt: true,
+      },
+      orderBy: {
+        lastLoginAt: 'asc',
+      },
+    });
+  }
+
+  /**
+   * Marca múltiplos usuários como inativos
+   */
+  async markMultipleAsInactive(userIds: string[]) {
+    if (userIds.length === 0) {
+      return { count: 0 };
+    }
+
+    return this.prisma.user.updateMany({
+      where: {
+        id: {
+          in: userIds,
+        },
+      },
+      data: {
+        isActive: false,
+      },
+    });
+  }
+
+  /**
+   * Reativa um usuário
+   */
+  async reactivate(userId: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { isActive: true },
+      select: {
+        id: true,
+        email: true,
+        isActive: true,
+        lastLoginAt: true,
       },
     });
   }

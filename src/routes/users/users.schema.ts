@@ -37,6 +37,7 @@ export const userSchema = z.object({
   nickname: z.string().min(1).max(50),
   avatar: z.string().url().nullable(),
   isActive: z.boolean(),
+  lastLoginAt: z.string().datetime().nullable().optional(),
   lvl: z.number().int().min(1).max(85),
   role: userRoleSchema,
   classeId: z.string().cuid().nullable(),

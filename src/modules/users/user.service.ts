@@ -57,9 +57,9 @@ export class UserService {
         updatedAt: user.updatedAt.toISOString(),
         classe: user.classe
           ? {
-            ...user.classe,
-            createdAt: user.classe.createdAt.toISOString(),
-          }
+              ...user.classe,
+              createdAt: user.classe.createdAt.toISOString(),
+            }
           : null,
       })),
       pagination: {
@@ -99,11 +99,12 @@ export class UserService {
       ...user,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
+      lastLoginAt: user.lastLoginAt?.toISOString() ?? null,
       classe: user.classe
         ? {
-          ...user.classe,
-          createdAt: user.classe.createdAt.toISOString(),
-        }
+            ...user.classe,
+            createdAt: user.classe.createdAt.toISOString(),
+          }
         : null,
       companyParties,
     };
@@ -132,6 +133,7 @@ export class UserService {
       lvl: data.lvl,
       role: data.role,
       classeId: data.classeId === '' ? null : data.classeId,
+      lastLoginAt: null, // Inicializar como null até primeiro login
     };
 
     if (!cleanData.avatar) {
@@ -147,6 +149,7 @@ export class UserService {
       ...user,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
+      lastLoginAt: user.lastLoginAt?.toISOString() ?? null,
     };
   }
 
@@ -174,6 +177,7 @@ export class UserService {
       role: 'PLAYER' as const, // Always set to PLAYER for public registration
       isActive: true,
       lvl: data.lvl,
+      lastLoginAt: null, // Inicializar como null até primeiro login
     };
 
     // Generate avatar if not provided
@@ -191,6 +195,7 @@ export class UserService {
       ...user,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
+      lastLoginAt: user.lastLoginAt?.toISOString() ?? null,
     };
   }
 
@@ -218,11 +223,12 @@ export class UserService {
       ...user,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
+      lastLoginAt: user.lastLoginAt?.toISOString() ?? null,
       classe: user.classe
         ? {
-          ...user.classe,
-          createdAt: user.classe.createdAt.toISOString(),
-        }
+            ...user.classe,
+            createdAt: user.classe.createdAt.toISOString(),
+          }
         : null,
     };
   }
@@ -260,9 +266,9 @@ export class UserService {
       updatedAt: user.updatedAt.toISOString(),
       classe: user.classe
         ? {
-          ...user.classe,
-          createdAt: user.classe.createdAt.toISOString(),
-        }
+            ...user.classe,
+            createdAt: user.classe.createdAt.toISOString(),
+          }
         : null,
     };
   }
@@ -288,11 +294,12 @@ export class UserService {
       ...user,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
+      lastLoginAt: user.lastLoginAt?.toISOString() ?? null,
       classe: user.classe
         ? {
-          ...user.classe,
-          createdAt: user.classe.createdAt.toISOString(),
-        }
+            ...user.classe,
+            createdAt: user.classe.createdAt.toISOString(),
+          }
         : null,
     };
   }

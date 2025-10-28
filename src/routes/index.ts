@@ -1,8 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import type { FastifyPluginAsync } from 'fastify';
 import { login } from '@/libs/auth.ts';
 import { z } from 'zod';
 import { UserService } from '@/modules/users/user.service.ts';
 import { registerUserSchema } from '@/routes/users/users.schema.ts';
+import { userInactivityRoutes } from '@/routes/users/user-inactivity.routes.ts';
 
 // eslint-disable-next-line @typescript-eslint/require-await
 const indexRoutes: FastifyPluginAsync = async fastify => {
@@ -174,7 +178,15 @@ const indexRoutes: FastifyPluginAsync = async fastify => {
           playerType: { type: 'string', enum: ['PVP', 'PVE'] },
           classeId: { type: 'string', nullable: true },
         },
-        required: ['email', 'password', 'name', 'nickname', 'phone', 'lvl', 'playerType'],
+        required: [
+          'email',
+          'password',
+          'name',
+          'nickname',
+          'phone',
+          'lvl',
+          'playerType',
+        ],
       },
       response: {
         201: {
@@ -255,9 +267,14 @@ const indexRoutes: FastifyPluginAsync = async fastify => {
             nickname: { type: 'string' },
             role: { type: 'string', enum: ['ADMIN', 'PLAYER', 'CP_LEADER'] },
             isActive: { type: 'boolean' },
+            lastLoginAt: { type: 'string', nullable: true },
             lvl: { type: 'number' },
             classeId: { type: 'string', nullable: true },
-            playerType: { type: 'string', enum: ['PVP', 'PVE'], nullable: true },
+            playerType: {
+              type: 'string',
+              enum: ['PVP', 'PVE'],
+              nullable: true,
+            },
             clan: { type: 'string', enum: ['CLA1', 'CLA2'], nullable: true },
             bagUrl: { type: 'string', nullable: true },
             classe: {
@@ -307,6 +324,7 @@ const indexRoutes: FastifyPluginAsync = async fastify => {
           nickname: true,
           role: true,
           isActive: true,
+          lastLoginAt: true,
           lvl: true,
           classeId: true,
           playerType: true,
@@ -335,17 +353,21 @@ const indexRoutes: FastifyPluginAsync = async fastify => {
 
       return reply.status(200).send({
         ...user,
+        lastLoginAt: user.lastLoginAt?.toISOString() ?? null,
         createdAt: user.createdAt.toISOString(),
         updatedAt: user.updatedAt.toISOString(),
         classe: user.classe
           ? {
-            ...user.classe,
-            createdAt: user.classe.createdAt.toISOString(),
-          }
+              ...user.classe,
+              createdAt: user.classe.createdAt.toISOString(),
+            }
           : null,
       });
     },
   });
+
+  // Register user inactivity routes
+  await userInactivityRoutes(fastify);
 };
 
 export default indexRoutes;
