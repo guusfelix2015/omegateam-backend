@@ -11,7 +11,14 @@ const uploadRoutes: FastifyPluginAsync = async fastify => {
       return uploadController.uploadUserInventoryImage(request, reply);
     },
   });
+
+  // POST /upload/user-avatar - Upload user avatar (Authenticated users)
+  fastify.post('/user-avatar', {
+    preValidation: [fastify.authenticate],
+    handler: async (request, reply) => {
+      return uploadController.uploadUserAvatar(request, reply);
+    },
+  });
 };
 
 export default uploadRoutes;
-

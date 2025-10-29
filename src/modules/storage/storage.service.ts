@@ -63,10 +63,10 @@ export class StorageService {
     return `${folder}/${timestamp}-${randomId}-${sanitized}.${extension}`;
   }
 
-  /**
-   * Upload user inventory image to Contabo Object Storage
-   */
-  async uploadUserInventoryImage(file: MultipartFile): Promise<string> {
+  private async uploadFileToFolder(
+    file: MultipartFile,
+    folder: string
+  ): Promise<string> {
     try {
       console.log('[Storage] Reading file buffer...');
       console.log('[Storage] File info:', {
@@ -86,7 +86,7 @@ export class StorageService {
       console.log('[Storage] File validation passed');
 
       // Generate unique filename
-      const filename = this.generateFilename(file.filename);
+      const filename = this.generateFilename(file.filename, folder);
 
       console.log('[Storage] Generated filename:', filename);
 
@@ -141,6 +141,20 @@ export class StorageService {
         `Failed to upload image: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
     }
+  }
+
+  /**
+   * Upload user inventory image to Contabo Object Storage
+   */
+  async uploadUserInventoryImage(file: MultipartFile): Promise<string> {
+    return this.uploadFileToFolder(file, 'user-inventory');
+  }
+
+  /**
+   * Upload user avatar image to Contabo Object Storage
+   */
+  async uploadUserAvatarImage(file: MultipartFile): Promise<string> {
+    return this.uploadFileToFolder(file, 'avatars');
   }
 
   /**
@@ -232,4 +246,3 @@ export class StorageService {
     }
   }
 }
-
