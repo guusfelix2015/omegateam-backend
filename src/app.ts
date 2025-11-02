@@ -25,6 +25,7 @@ import dkpRoutes from '@/routes/dkp/dkp.routes.ts';
 import auctionsRoutes from '@/routes/auctions/auctions.routes.ts';
 import uploadRoutes from '@/routes/upload/upload.routes.ts';
 import settingsRoutes from '@/routes/settings/settings.routes.ts';
+import { adminStatsRoutes } from '@/routes/admin-stats.routes.ts';
 
 export async function createApp(): Promise<FastifyInstance> {
   const app = Fastify({
@@ -79,6 +80,7 @@ export async function createApp(): Promise<FastifyInstance> {
   await app.register(auctionsRoutes, { prefix: '/auctions' });
   await app.register(uploadRoutes, { prefix: '/upload' });
   await app.register(settingsRoutes, { prefix: '/settings' });
+  await app.register(adminStatsRoutes, { prefix: '/admin/stats' });
 
   // 404 handler
   app.setNotFoundHandler(async (request, reply) => {
